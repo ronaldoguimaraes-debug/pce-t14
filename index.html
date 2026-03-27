@@ -751,8 +751,8 @@ async function fetchDash(silent=false){
   try{
     // Fetch ambas as APIs em paralelo
     const [respBR, respUS] = await Promise.allSettled([
-      fetch(API_URL,    {method:'GET', cache:'no-cache'}),
-      fetch(API_URL_US, {method:'GET', cache:'no-cache'})
+      fetch(API_URL,    {method:'GET', cache:'no-cache', redirect:'follow'}),
+      fetch(API_URL_US, {method:'GET', cache:'no-cache', redirect:'follow'})
     ]);
 
     // Brasil — extrai rows + stats do novo payload v2
