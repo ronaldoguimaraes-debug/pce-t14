@@ -377,8 +377,8 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
 </div><!-- /layout -->
 
 <script>
-const API_URL    = 'https://script.google.com/macros/s/AKfycbxr3LxP2B8aWry7BbIdwcSezTC8cwSsavmg9SqROb95kYBWoa8Qcgb1yeQdAfQiRVQ/exec';
-const API_URL_US = 'https://script.google.com/macros/s/AKfycbzkxcknW6K9_n3RiTFZ0C8gqT7RUZZAdF1isduBdKrBED260e9ZKOlk6RBZWwkqaqsN/exec';
+const API_URL    = 'https://script.google.com/macros/s/AKfycbwXhN46ISIpc2uo0mPvxFk8cKlduX7gkwDGNSEnxQ4KE0jlK1unGnMIGX2ydbgp6PBF/exec';
+const API_URL_US = 'https://script.google.com/macros/s/AKfycbzheDxe0f8y32wzWamqTgJxW37joYOtgaiTIg739TgHNGYXkLLsSnihfCuIb_tMwgE/exec';
 const FALLBACK = """ + fallback_json + r""";
 
 const PERFIL = [
@@ -744,36 +744,59 @@ function setStatus(type,txt){
   t.textContent=txt;
 }
 
+// ── JSONP: único método que funciona sem CORS com Apps Script ──
+function jsonp(url, callbackName){
+  return new Promise((resolve, reject)=>{
+    const timeout = setTimeout(()=>{
+      cleanup();
+      reject(new Error('Timeout'));
+    }, 10000);
+    function cleanup(){
+      clearTimeout(timeout);
+      delete window[callbackName];
+      const el = document.getElementById('jsonp_'+callbackName);
+      if(el) el.remove();
+    }
+    window[callbackName] = function(data){
+      cleanup();
+      resolve(data);
+    };
+    const script = document.createElement('script');
+    script.id = 'jsonp_'+callbackName;
+    script.src = url + '&callback=' + callbackName;
+    script.onerror = ()=>{ cleanup(); reject(new Error('Script error')); };
+    document.head.appendChild(script);
+  });
+}
+
 async function fetchDash(silent=false){
   const btn=document.getElementById('btnR');
   btn.disabled=true;btn.classList.add('spinning');
   if(!silent) setStatus('load','Buscando...');
   try{
-    // Fetch ambas as APIs em paralelo
-    const [respBR, respUS] = await Promise.allSettled([
-      fetch(API_URL,    {method:'GET', cache:'no-cache', redirect:'follow'}),
-      fetch(API_URL_US, {method:'GET', cache:'no-cache', redirect:'follow'})
+    // Busca as duas APIs em paralelo via JSONP
+    const [resBR, resUS] = await Promise.allSettled([
+      jsonp(API_URL,    'cb_br_'    + Date.now()),
+      jsonp(API_URL_US, 'cb_us_'    + Date.now())
     ]);
 
-    // Brasil — extrai rows + stats do novo payload v2
+    // Brasil
     let brRows = null, brStats = null;
-    if(respBR.status === 'fulfilled' && respBR.value.ok){
-      const j = await respBR.value.json();
-      if(j.rows && j.rows.length){
+    if(resBR.status === 'fulfilled'){
+      const j = resBR.value;
+      if(j && j.rows && j.rows.length){
         brRows  = j.rows;
-        brStats = j.stats || null; // agregações prontas (v2)
+        brStats = j.stats || null;
       }
     }
 
-    // Orlando — usa confirmados direto do campo top-level (v2 retorna j.confirmados)
+    // Orlando
     let orlandoCount = 0;
-    if(respUS.status === 'fulfilled' && respUS.value.ok){
-      const j = await respUS.value.json();
-      // v2: campo confirmados pronto; fallback: conta do array
-      if(j.confirmados !== undefined){
-        orlandoCount = j.confirmados;
-      } else if(j.rows){
-        orlandoCount = j.rows.filter(r=>(r.presenca||'').toUpperCase()==='CONFIRMADO').length;
+    if(resUS.status === 'fulfilled'){
+      const j = resUS.value;
+      if(j){
+        if(j.confirmados !== undefined) orlandoCount = j.confirmados;
+        else if(j.rows) orlandoCount = j.rows.filter(r=>(r.presenca||'').toUpperCase()==='CONFIRMADO').length;
       }
     }
 
@@ -782,11 +805,11 @@ async function fetchDash(silent=false){
     renderDash(brRows, orlandoCount, brStats);
     const now = new Date();
     document.getElementById('ts').textContent = now.toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const usLabel = respUS.status === 'fulfilled' ? ` · 🇺🇸 ${orlandoCount}` : ' · 🇺🇸 cache';
+    const usLabel = resUS.status==='fulfilled' ? ` · 🇺🇸 ${orlandoCount}` : ' · 🇺🇸 cache';
     setStatus('ok', `Ao vivo · ${brRows.length}${usLabel}`);
   }catch(e){
     console.warn('Fallback:',e.message);
-    renderDash(FALLBACK, undefined);
+    renderDash(FALLBACK, undefined, null);
     document.getElementById('ts').textContent = new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+' (cache)';
     setStatus('err','Cache local');
   }finally{
