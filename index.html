@@ -410,20 +410,16 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
             </div>
           </div>
 
-          <!-- CARD ORLANDO -->
+          <!-- CARD BR + US -->
           <div class="im-card us">
             <div class="im-flag">🇺🇸</div>
             <div class="im-body">
-              <div class="im-lbl">Imersão Orlando — T13</div>
-              <div class="im-desc">Total da turma</div>
-              <div class="im-num" id="num-us-total">—</div>
-              <div class="im-sub">participantes registrados</div>
-              <div style="margin-top:10px">
-                <div class="im-lbl">Confirmados</div>
-                <div class="im-num" style="font-size:28px" id="num-us">—</div>
-                <div class="im-bar" style="margin-top:6px"><div class="im-fill" id="bar-us" style="width:0%"></div></div>
-                <div class="im-pct" id="pct-us">—</div>
-              </div>
+              <div class="im-lbl">Imersão Brasil + Orlando</div>
+              <div class="im-desc">Confirmados nos dois eventos</div>
+              <div class="im-num" id="num-us">—</div>
+              <div class="im-sub">participantes confirmados</div>
+              <div class="im-bar"><div class="im-fill" id="bar-us" style="width:0%"></div></div>
+              <div class="im-pct" id="pct-us">—</div>
             </div>
           </div>
 
@@ -779,17 +775,14 @@ function renderDash(rows, orlandoCount, stats){
   document.getElementById('pct-br').textContent  = `${brPct}% dos confirmados`;
   document.getElementById('pct-brus').textContent= `${brusPct}% dos confirmados`;
 
-  // ── US card ──
-  const usTotal = (window._orlandoTotal !== undefined) ? window._orlandoTotal : '—';
-  document.getElementById('num-us-total').textContent = usTotal;
-  document.getElementById('num-us').textContent       = usCount;
-  const usPct = (window._orlandoTotal > 0) ? Math.round(usCount/window._orlandoTotal*100) : 0;
-  document.getElementById('pct-us').textContent = usTotal !== '—' ? `${usPct}% do total` : '—';
+  // ── US card — BR+US CONFIRMAOD da planilha Brasil ──
+  document.getElementById('num-us').textContent = brUs;
+  const usPct = totalConf2>0 ? Math.round(brUs/totalConf2*100) : 0;
+  document.getElementById('pct-us').textContent = `${usPct}% dos confirmados`;
 
   setTimeout(()=>{
-    document.getElementById('bar-br').style.width   = brPct+'%';
-    document.getElementById('bar-brus').style.width = brusPct+'%';
-    document.getElementById('bar-us').style.width   = (usTotal!=='—'?usPct:0)+'%';
+    document.getElementById('bar-br').style.width  = brPct+'%';
+    document.getElementById('bar-us').style.width  = usPct+'%';
   },300);
 
   // ── Presença donut — usa stats prontos ──
