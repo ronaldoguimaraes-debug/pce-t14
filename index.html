@@ -381,23 +381,31 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
           <div class="im-card br">
             <div class="im-flag">🇧🇷</div>
             <div class="im-body">
-              <div class="im-lbl">Imersão Brasil</div>
-              <div class="im-desc">Somente no Brasil</div>
-              <div class="im-num" id="num-br">—</div>
-              <div class="im-sub">participantes confirmados</div>
-              <div class="im-bar"><div class="im-fill" id="bar-br" style="width:0%"></div></div>
-              <div class="im-pct" id="pct-br">—</div>
+              <div class="im-lbl">Imersão Brasil — T14</div>
+              <div class="im-desc">Total da turma</div>
+              <div class="im-num" id="num-br-total">—</div>
+              <div class="im-sub">participantes registrados</div>
+              <div style="margin-top:10px">
+                <div class="im-lbl">Confirmados</div>
+                <div class="im-num" style="font-size:28px" id="num-br">—</div>
+                <div class="im-bar" style="margin-top:6px"><div class="im-fill" id="bar-br" style="width:0%"></div></div>
+                <div class="im-pct" id="pct-br">—</div>
+              </div>
             </div>
           </div>
           <div class="im-card us">
             <div class="im-flag">🇺🇸</div>
             <div class="im-body">
-              <div class="im-lbl">Imersão Brasil + Orlando</div>
-              <div class="im-desc">Confirmados nos dois eventos</div>
-              <div class="im-num" id="num-us">—</div>
-              <div class="im-sub">participantes confirmados</div>
-              <div class="im-bar"><div class="im-fill" id="bar-us" style="width:0%"></div></div>
-              <div class="im-pct" id="pct-us">—</div>
+              <div class="im-lbl">Imersão Orlando — T13</div>
+              <div class="im-desc">Total da turma</div>
+              <div class="im-num" id="num-us-total">—</div>
+              <div class="im-sub">participantes registrados</div>
+              <div style="margin-top:10px">
+                <div class="im-lbl">Confirmados</div>
+                <div class="im-num" style="font-size:28px" id="num-us">—</div>
+                <div class="im-bar" style="margin-top:6px"><div class="im-fill" id="bar-us" style="width:0%"></div></div>
+                <div class="im-pct" id="pct-us">—</div>
+              </div>
             </div>
           </div>
         </div>
@@ -741,15 +749,22 @@ function renderDash(rows, orlandoCount, stats){
   `;
 
   // ── Imersão cards ──
-  document.getElementById('num-br').textContent=brOnly;
-  document.getElementById('num-us').textContent=usCount;
-  const brPct=totalConfFinal>0?Math.round(brOnly/totalConfFinal*100):0;
-  const usPct=totalConfFinal>0?Math.round(usCount/totalConfFinal*100):0;
-  document.getElementById('pct-br').textContent=`${brPct}% dos confirmados`;
-  document.getElementById('pct-us').textContent=`${usPct}% dos confirmados`;
+  // BR card
+  document.getElementById('num-br-total').textContent = total;
+  document.getElementById('num-br').textContent = brOnly;
+  const brPct = total>0 ? Math.round(brOnly/total*100) : 0;
+  document.getElementById('pct-br').textContent = `${brPct}% do total`;
+
+  // US card — total e confirmados vêm da API Orlando
+  const usTotal = (window._orlandoTotal !== undefined) ? window._orlandoTotal : '—';
+  document.getElementById('num-us-total').textContent = usTotal;
+  document.getElementById('num-us').textContent = usCount;
+  const usPct = (window._orlandoTotal > 0) ? Math.round(usCount/window._orlandoTotal*100) : 0;
+  document.getElementById('pct-us').textContent = usTotal !== '—' ? `${usPct}% do total` : '—';
+
   setTimeout(()=>{
     document.getElementById('bar-br').style.width=brPct+'%';
-    document.getElementById('bar-us').style.width=usPct+'%';
+    document.getElementById('bar-us').style.width=(usTotal!=='—'?usPct:0)+'%';
   },300);
 
   // ── Presença donut — usa stats prontos ──
@@ -924,6 +939,7 @@ async function fetchDash(silent=false){
       if(j){
         if(j.confirmados !== undefined) orlandoCount = j.confirmados;
         else if(j.rows) orlandoCount = j.rows.filter(r=>(r.presenca||'').toUpperCase()==='CONFIRMADO').length;
+        window._orlandoTotal = j.total || 0;
       }
     }
 
