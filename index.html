@@ -750,7 +750,7 @@ function jsonp(url, callbackName){
     const timeout = setTimeout(()=>{
       cleanup();
       reject(new Error('Timeout'));
-    }, 10000);
+    }, 15000);
     function cleanup(){
       clearTimeout(timeout);
       delete window[callbackName];
@@ -763,7 +763,7 @@ function jsonp(url, callbackName){
     };
     const script = document.createElement('script');
     script.id = 'jsonp_'+callbackName;
-    script.src = url + '&callback=' + callbackName;
+    script.src = url + (url.indexOf('?')>=0 ? '&' : '?') + 'callback=' + callbackName;
     script.onerror = ()=>{ cleanup(); reject(new Error('Script error')); };
     document.head.appendChild(script);
   });
@@ -775,9 +775,10 @@ async function fetchDash(silent=false){
   if(!silent) setStatus('load','Buscando...');
   try{
     // Busca as duas APIs em paralelo via JSONP
+    const ts = Date.now();
     const [resBR, resUS] = await Promise.allSettled([
-      jsonp(API_URL,    'cb_br_'    + Date.now()),
-      jsonp(API_URL_US, 'cb_us_'    + Date.now())
+      jsonp(API_URL,    'cb_br_' + ts),
+      jsonp(API_URL_US, 'cb_us_' + ts)
     ]);
 
     // Brasil
