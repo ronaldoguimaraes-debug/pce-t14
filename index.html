@@ -378,21 +378,39 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
         <!-- IMERSÕES DESTAQUE -->
         <div class="sl">Confirmados por Imersão</div>
         <div class="imersao-row">
-          <div class="im-card br">
-            <div class="im-flag">🇧🇷</div>
-            <div class="im-body">
-              <div class="im-lbl">Imersão Brasil — T14</div>
-              <div class="im-desc">Total da turma</div>
-              <div class="im-num" id="num-br-total">—</div>
-              <div class="im-sub">participantes registrados</div>
-              <div style="margin-top:10px">
-                <div class="im-lbl">Confirmados</div>
-                <div class="im-num" style="font-size:28px" id="num-br">—</div>
-                <div class="im-bar" style="margin-top:6px"><div class="im-fill" id="bar-br" style="width:0%"></div></div>
+
+          <!-- CARD BRASIL -->
+          <div class="im-card br" style="flex-direction:column;align-items:flex-start;gap:12px">
+            <div style="display:flex;align-items:center;gap:12px;width:100%">
+              <div class="im-flag">🇧🇷</div>
+              <div>
+                <div class="im-lbl">T14 — Brasil</div>
+                <div class="im-desc">Total da turma: <strong id="num-br-total" style="color:var(--cream)">—</strong> &nbsp;|&nbsp; Confirmados: <strong id="num-br-totalconf" style="color:var(--green)">—</strong></div>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
+              <!-- Somente Brasil -->
+              <div>
+                <div class="im-lbl">Imersão Brasil</div>
+                <div class="im-desc">Somente no Brasil</div>
+                <div class="im-num" id="num-br">—</div>
+                <div class="im-sub">participantes confirmados</div>
+                <div class="im-bar"><div class="im-fill" id="bar-br" style="width:0%"></div></div>
                 <div class="im-pct" id="pct-br">—</div>
+              </div>
+              <!-- BR + US -->
+              <div>
+                <div class="im-lbl" style="color:#a78bfa">Imersão Brasil + Orlando</div>
+                <div class="im-desc">Confirmados nos dois eventos</div>
+                <div class="im-num" id="num-brus" style="color:#a78bfa">—</div>
+                <div class="im-sub">participantes confirmados</div>
+                <div class="im-bar"><div class="im-fill" id="bar-brus" style="width:0%;background:#a78bfa"></div></div>
+                <div class="im-pct" id="pct-brus" style="color:#a78bfa">—</div>
               </div>
             </div>
           </div>
+
+          <!-- CARD ORLANDO -->
           <div class="im-card us">
             <div class="im-flag">🇺🇸</div>
             <div class="im-body">
@@ -408,6 +426,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
               </div>
             </div>
           </div>
+
         </div>
 
         <!-- Presença & Onboarding -->
@@ -749,22 +768,28 @@ function renderDash(rows, orlandoCount, stats){
   `;
 
   // ── Imersão cards ──
-  // BR card
-  document.getElementById('num-br-total').textContent = total;
-  document.getElementById('num-br').textContent = brOnly;
-  const brPct = total>0 ? Math.round(brOnly/total*100) : 0;
-  document.getElementById('pct-br').textContent = `${brPct}% do total`;
+  // ── BR card ──
+  const totalConf2 = brOnly + brUs; // BR confirmado + BR+US confirmado
+  document.getElementById('num-br-total').textContent    = total;
+  document.getElementById('num-br-totalconf').textContent = totalConf2;
+  document.getElementById('num-br').textContent          = brOnly;
+  document.getElementById('num-brus').textContent        = brUs;
+  const brPct  = totalConf2>0 ? Math.round(brOnly/totalConf2*100) : 0;
+  const brusPct= totalConf2>0 ? Math.round(brUs/totalConf2*100)   : 0;
+  document.getElementById('pct-br').textContent  = `${brPct}% dos confirmados`;
+  document.getElementById('pct-brus').textContent= `${brusPct}% dos confirmados`;
 
-  // US card — total e confirmados vêm da API Orlando
+  // ── US card ──
   const usTotal = (window._orlandoTotal !== undefined) ? window._orlandoTotal : '—';
   document.getElementById('num-us-total').textContent = usTotal;
-  document.getElementById('num-us').textContent = usCount;
+  document.getElementById('num-us').textContent       = usCount;
   const usPct = (window._orlandoTotal > 0) ? Math.round(usCount/window._orlandoTotal*100) : 0;
   document.getElementById('pct-us').textContent = usTotal !== '—' ? `${usPct}% do total` : '—';
 
   setTimeout(()=>{
-    document.getElementById('bar-br').style.width=brPct+'%';
-    document.getElementById('bar-us').style.width=(usTotal!=='—'?usPct:0)+'%';
+    document.getElementById('bar-br').style.width   = brPct+'%';
+    document.getElementById('bar-brus').style.width = brusPct+'%';
+    document.getElementById('bar-us').style.width   = (usTotal!=='—'?usPct:0)+'%';
   },300);
 
   // ── Presença donut — usa stats prontos ──
