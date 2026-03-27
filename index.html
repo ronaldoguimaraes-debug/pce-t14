@@ -539,17 +539,15 @@ function buildTicker(rows, orlandoCount, stats){
   const t100 = v => total>0?Math.round(v/total*100):0;
   const tc100 = v => totalConf>0?Math.round(v/totalConf*100):0;
   const items=[
-    {lbl:'Total da Turma T14',      val:total,       cls:'w', tag:null},
-    {lbl:'Total Confirmados',        val:totalConf,   cls:'g', tag:{txt:`${t100(totalConf)}%`,cls:'up'}},
-    {lbl:'🇧🇷 Imersão Brasil',       val:brOnly,      cls:'g', tag:{txt:`${tc100(brOnly)}%`,cls:'up'}},
-    {lbl:'🇺🇸 Brasil + Orlando',     val:orlandoCount,cls:'b', tag:{txt:`${tc100(orlandoCount)}%`,cls:'up'}},
-    {lbl:'Onboarding Realizado',     val:onbReal,     cls:'w', tag:{txt:`${t100(onbReal)}%`,cls:'neu'}},
-    {lbl:'Typeform Preenchido',      val:typeformOk,  cls:'a', tag:{txt:`${t100(typeformOk)}%`,cls:'neu'}},
-    {lbl:'Contrato Assinado',        val:contratoOk,  cls:'w', tag:{txt:`${t100(contratoOk)}%`,cls:'neu'}},
-    {lbl:'WhatsApp Adicionado',      val:whatsOk,     cls:'w', tag:{txt:`${t100(whatsOk)}%`,cls:'neu'}},
-    {lbl:'Sem Retorno',              val:semRet,      cls:'r', tag:{txt:`${t100(semRet)}%`,cls:'dn'}},
-    {lbl:'Próxima Turma',            val:proxTurma,   cls:'a', tag:null},
-    {lbl:'Cancelamentos',            val:cancelam,    cls:'r', tag:null},
+    {lbl:'🇧🇷 Total da Turma T14',   val:total,       cls:'w', tag:null},
+    {lbl:'🇧🇷 Confirmados',          val:brOnly,      cls:'g', tag:{txt:`${t100(brOnly)}%`,cls:'up'}},
+    {lbl:'🇧🇷 Sem Retorno',          val:semRet,      cls:'r', tag:{txt:`${t100(semRet)}%`,cls:'dn'}},
+    {lbl:'🇧🇷 Próxima Turma',        val:proxTurma,   cls:'a', tag:null},
+    {lbl:'🇧🇷 Cancelamentos',        val:cancelam,    cls:'r', tag:null},
+    {lbl:'🇧🇷 Onboarding Realizado', val:onbReal,     cls:'w', tag:{txt:`${t100(onbReal)}%`,cls:'neu'}},
+    {lbl:'🇧🇷 WhatsApp Adicionado',  val:whatsOk,     cls:'g', tag:{txt:`${t100(whatsOk)}%`,cls:'up'}},
+    {lbl:'🇧🇷 Typeform Preenchido',  val:typeformOk,  cls:'a', tag:{txt:`${t100(typeformOk)}%`,cls:'neu'}},
+    {lbl:'🇧🇷 Contrato Assinado',    val:contratoOk,  cls:'w', tag:{txt:`${t100(contratoOk)}%`,cls:'neu'}},
   ];
 
   const html=items.map(i=>`
