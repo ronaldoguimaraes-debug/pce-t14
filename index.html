@@ -144,7 +144,7 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
 .page{display:none}.page.active{display:block}
 
 /* ── IMERSÃO HIGHLIGHT ── */
-.imersao-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.imersao-row{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:14px}
 .im-card{border-radius:var(--rl);padding:12px 16px;position:relative;overflow:hidden;transition:transform .2s;display:flex;align-items:center;gap:14px}
 .im-card:hover{transform:translateY(-1px)}
 .im-card.br{background:linear-gradient(135deg,#172616 0%,#1d2f1d 100%);border:1px solid rgba(99,248,88,.2)}
@@ -379,34 +379,99 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--cream);dis
         <div class="sl">Confirmados por Imersão</div>
         <div class="imersao-row">
 
-          <!-- CARD BRASIL -->
-          <div class="im-card br" style="flex-direction:column;align-items:flex-start;gap:12px">
-            <div style="display:flex;align-items:center;gap:12px;width:100%">
-              <div class="im-flag">🇧🇷</div>
-              <div>
-                <div class="im-lbl">T14 — Brasil</div>
-                <div class="im-desc">Total da turma: <strong id="num-br-total" style="color:var(--cream)">—</strong> &nbsp;|&nbsp; Confirmados: <strong id="num-br-totalconf" style="color:var(--green)">—</strong></div>
+          <!-- CARD BRASIL — full width -->
+          <div class="im-card br" style="flex-direction:column;align-items:flex-start;gap:0;width:100%;padding:28px 32px">
+
+            <!-- Header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:24px">
+              <div style="display:flex;align-items:center;gap:16px">
+                <span style="font-size:36px">🇧🇷</span>
+                <div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:3px">T14 — Imersão Brasil</div>
+                  <div style="font-size:13px;color:var(--muted)">Programa de Crescimento Empresarial · Febracis</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:32px">
+                <div style="text-align:center">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total da turma</div>
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;line-height:1;color:var(--cream)" id="num-br-total">—</div>
+                  <div style="font-size:10px;color:var(--muted2);margin-top:3px">participantes</div>
+                </div>
+                <div style="width:1px;height:48px;background:rgba(255,255,255,.1)"></div>
+                <div style="text-align:center">
+                  <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Total confirmados</div>
+                  <div style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:800;line-height:1;color:var(--green)" id="num-br-totalconf">—</div>
+                  <div style="font-size:10px;color:var(--muted2);margin-top:3px">confirmados</div>
+                </div>
               </div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;width:100%">
-              <!-- Somente Brasil -->
-              <div>
-                <div class="im-lbl">Imersão Brasil</div>
-                <div class="im-desc">Somente no Brasil</div>
-                <div class="im-num" id="num-br">—</div>
-                <div class="im-sub">participantes confirmados</div>
-                <div class="im-bar"><div class="im-fill" id="bar-br" style="width:0%"></div></div>
-                <div class="im-pct" id="pct-br">—</div>
+
+            <!-- Divisor -->
+            <div style="width:100%;height:1px;background:rgba(255,255,255,.07);margin-bottom:24px"></div>
+
+            <!-- Três colunas: BR | divisor | BR+US | divisor | visual -->
+            <div style="display:grid;grid-template-columns:1fr 1px 1fr 1px 1fr;gap:0;width:100%;align-items:center">
+
+              <!-- Bloco BR -->
+              <div style="padding-right:32px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <div style="width:10px;height:10px;border-radius:50%;background:var(--green);flex-shrink:0;box-shadow:0 0 8px rgba(99,248,88,.5)"></div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green)">Imersão Brasil</div>
+                </div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Somente no Brasil</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:800;line-height:1;color:var(--green)" id="num-br">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:14px">participantes confirmados</div>
+                <div style="background:rgba(99,248,88,.08);border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px">
+                  <div style="height:100%;border-radius:6px;background:var(--green);transition:width 1.2s cubic-bezier(.4,0,.2,1)" id="bar-br"></div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:var(--green)" id="pct-br">—</div>
               </div>
-              <!-- BR + US -->
-              <div>
-                <div class="im-lbl" style="color:#a78bfa">Imersão Brasil + Orlando</div>
-                <div class="im-desc">Confirmados nos dois eventos</div>
-                <div class="im-num" id="num-brus" style="color:#a78bfa">—</div>
-                <div class="im-sub">participantes confirmados</div>
-                <div class="im-bar"><div class="im-fill" id="bar-brus" style="width:0%;background:#a78bfa"></div></div>
-                <div class="im-pct" id="pct-brus" style="color:#a78bfa">—</div>
+
+              <!-- Divisor vertical -->
+              <div style="background:rgba(255,255,255,.07);height:120px;margin:0 4px"></div>
+
+              <!-- Bloco BR+US -->
+              <div style="padding:0 32px">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                  <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;flex-shrink:0;box-shadow:0 0 8px rgba(167,139,250,.4)"></div>
+                  <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a78bfa">Brasil + Orlando</div>
+                </div>
+                <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Confirmados nos dois eventos</div>
+                <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:800;line-height:1;color:#a78bfa" id="num-brus">—</div>
+                <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:14px">participantes confirmados</div>
+                <div style="background:rgba(167,139,250,.08);border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px">
+                  <div style="height:100%;border-radius:6px;background:#a78bfa;transition:width 1.2s cubic-bezier(.4,0,.2,1)" id="bar-brus"></div>
+                </div>
+                <div style="font-size:13px;font-weight:700;color:#a78bfa" id="pct-brus">—</div>
               </div>
+
+              <!-- Divisor vertical -->
+              <div style="background:rgba(255,255,255,.07);height:120px;margin:0 4px"></div>
+
+              <!-- Visual comparativo -->
+              <div style="padding-left:32px;display:flex;flex-direction:column;gap:16px">
+                <div style="font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">Distribuição dos confirmados</div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <span style="font-size:11px;color:var(--green)">🇧🇷 Brasil</span>
+                    <span style="font-size:11px;font-weight:700;color:var(--green)" id="pct-br-viz">—</span>
+                  </div>
+                  <div style="background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden">
+                    <div style="height:100%;border-radius:4px;background:var(--green);transition:width 1.2s cubic-bezier(.4,0,.2,1)" id="bar-br-viz"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <span style="font-size:11px;color:#a78bfa">🇺🇸 Brasil + Orlando</span>
+                    <span style="font-size:11px;font-weight:700;color:#a78bfa" id="pct-brus-viz">—</span>
+                  </div>
+                  <div style="background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden">
+                    <div style="height:100%;border-radius:4px;background:#a78bfa;transition:width 1.2s cubic-bezier(.4,0,.2,1)" id="bar-brus-viz"></div>
+                  </div>
+                </div>
+                <div style="font-size:10px;color:var(--muted2);margin-top:4px">% sobre o total de confirmados</div>
+              </div>
+
             </div>
           </div>
 
@@ -755,14 +820,19 @@ function renderDash(rows, orlandoCount, stats){
   // ── Imersão cards ──
   // ── BR card ──
   const totalConf2 = brOnly + brUs; // BR confirmado + BR+US confirmado
-  document.getElementById('num-br-total').textContent    = total;
+  document.getElementById('num-br-total').textContent     = total;
   document.getElementById('num-br-totalconf').textContent = totalConf2;
-  document.getElementById('num-br').textContent          = brOnly;
-  document.getElementById('num-brus').textContent        = brUs;
+  document.getElementById('num-br').textContent           = brOnly;
+  document.getElementById('num-brus').textContent         = brUs;
   const brPct  = totalConf2>0 ? Math.round(brOnly/totalConf2*100) : 0;
   const brusPct= totalConf2>0 ? Math.round(brUs/totalConf2*100)   : 0;
-  document.getElementById('pct-br').textContent  = `${brPct}% dos confirmados`;
-  document.getElementById('pct-brus').textContent= `${brusPct}% dos confirmados`;
+  document.getElementById('pct-br').textContent   = `${brPct}% dos confirmados`;
+  document.getElementById('pct-brus').textContent = `${brusPct}% dos confirmados`;
+  // Barras visuais comparativas
+  if(document.getElementById('pct-br-viz')){
+    document.getElementById('pct-br-viz').textContent   = `${brPct}%`;
+    document.getElementById('pct-brus-viz').textContent = `${brusPct}%`;
+  }
 
   // ── US card — BR+US CONFIRMAOD da planilha Brasil ──
   document.getElementById('num-us').textContent = brUs;
@@ -770,8 +840,12 @@ function renderDash(rows, orlandoCount, stats){
   document.getElementById('pct-us').textContent = `${usPct}% dos confirmados`;
 
   setTimeout(()=>{
-    document.getElementById('bar-br').style.width  = brPct+'%';
-    document.getElementById('bar-us').style.width  = usPct+'%';
+    document.getElementById('bar-br').style.width   = brPct+'%';
+    document.getElementById('bar-brus').style.width = brusPct+'%';
+    if(document.getElementById('bar-br-viz')){
+      document.getElementById('bar-br-viz').style.width   = brPct+'%';
+      document.getElementById('bar-brus-viz').style.width = brusPct+'%';
+    }
   },300);
 
   // ── Presença donut — usa stats prontos ──
