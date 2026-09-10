@@ -95,7 +95,10 @@
   ];
   var byDate=function(a,b){return String(a.data_encontro||'').localeCompare(String(b.data_encontro||''));};
   function imersaoList(){
-    var stored=STATE.all.filter(function(e){return e.tipo==='imersao';});
+    var stored=STATE.all.filter(function(e){return e.tipo===tipoIM();});
+    /* As baselines PCE 10 a 14 sao imersoes do PCE. No escopo Experts a lista
+       comeca vazia e so cresce com o que for enviado. */
+    if(ehExperts())return stored.slice().sort(byDate);
     var base={}; BASELINE.forEach(function(b){base[b.label]=b;});
     /* Ao sobrescrever uma baseline, herda os campos curados que a tabela não guarda
        (fortes/melhoria/sub) para não perder o conteúdo editorial. */
@@ -150,6 +153,26 @@
   window.__npsReboot=function(){try{STATE.all=[];boot();}catch(e){}};
 
   /* ---------- parsers ---------- */
+  /* Itens de estrutura e experiencia do evento. Qualquer coluna que bata aqui NUNCA
+     e tratada como nome de palestrante, mesmo que pareca. */
+  var EXP_KEYS=/networking|material|ferramenta|espaco|ilumina|\bsom\b|staff|coffee|cafe|alimenta|comida|almoco|jantar|credenciamento|organiza|estrutura|\blocal\b|hotel|\bsala\b|aplicativo|\bapp\b|suporte|atendimento|recep|sinaliza|limpeza|banheiro|estacionamento|conteudo|didatico|experiencia|evento|palco|audio|video|tradu|transmiss|pontualidade|cronograma|brinde|kit|\bmesa\b|cadeira|climatiza|ar condicionado/;
+
+  /* Um cabecalho que e so o nome de uma pessoa: duas a cinco palavras, cada uma comecando
+     em maiuscula (ou sendo conectivo / "&"), sem numeros, e que nao caia na lista acima.
+     Cobre "Tiago Zanin", "Renatta Rezende", "Buzulin & A. Oliveira". */
+  function nomePalestrante(header){
+    var t=String(header||'').replace(/\s*\?.*$/,'')
+      .replace(/^\s*(avalie|avaliacao de|avaliação de|nota (para|de)|como voce avalia|como você avalia)\s+/i,'')
+      .replace(/\s*\(.*?\)\s*$/,'').trim();
+    if(!t||t.length>44||/\d/.test(t))return null;
+    if(EXP_KEYS.test(norm(t)))return null;
+    var w=t.split(/\s+/).filter(Boolean);
+    if(w.length<2||w.length>5)return null;
+    var conectivo=/^(e|de|da|do|dos|das|&)$/i;
+    var ok=w.every(function(x){return conectivo.test(x)||/^[&A-Z\u00c0-\u00dd]/.test(x);});
+    return ok?t:null;
+  }
+
   function palestranteName(header){var m=header.match(/palestrante\s+(.+?)\s*\?/i)||header.match(/palestrante\s+([^?.,]+)/i);return m?m[1].trim():header.slice(0,30);}
   function expLabel(header){var h=norm(header);
     if(/material didatico/.test(h))return 'Material Didático';
@@ -159,6 +182,14 @@
     if(/coffee/.test(h))return 'Coffee Break';
     if(/noite de networking|satisfeito.*networking/.test(h))return 'Noite de Networking';
     if(/networking.*(util|vivenciado)/.test(h))return 'Networking p/ negócio';
+    /* Formulacoes do formulario online (PCIA e afins), que antes caiam no corte de
+       34 caracteres e viravam rotulo truncado com reticencias. */
+    if(/satisfeito.*conteudo|satisfacao.*conteudo|conteudo abordado/.test(h))return 'Satisfação com o conteúdo';
+    if(/treinador|instrutor|facilitador|mentor do treinamento/.test(h))return 'Treinador';
+    if(/conexoes|trocas de experiencia|troca de experiencia/.test(h))return 'Conexões e trocas';
+    if(/plataforma|transmissao|qualidade de (audio|video|imagem)/.test(h))return 'Plataforma e transmissão';
+    if(/suporte|atendimento/.test(h))return 'Suporte e atendimento';
+    if(/duracao|tempo de|carga horaria|ritmo/.test(h))return 'Duração e ritmo';
     var c=header.replace(/em uma escala de 0 a 10,?/i,'').replace(/considere.*$/i,'').replace(/[?*]/g,'').trim();
     return c.length>34?c.slice(0,34)+'…':c;}
   function analyzeImersao(rows){
@@ -170,9 +201,13 @@
       if(isScaleCol(c.values)){var avg=avgOf(c.values);
         if(/recomenda/.test(h)){recomenda=avg;mapping.push({header:c.header,role:'scale',txt:'RECOMENDAÇÃO'});}
         else if(/palestrante/.test(h)){var nm=palestranteName(c.header);palestrantes.push({label:nm,score:avg});mapping.push({header:c.header,role:'scale',txt:'PALESTRANTE · '+nm});}
-        else{var lb=expLabel(c.header);experiencia.push({label:lb,score:avg});mapping.push({header:c.header,role:'scale',txt:'EXPERIÊNCIA · '+lb});}
+        else{
+          var _nm2=nomePalestrante(c.header);
+          if(_nm2){palestrantes.push({label:_nm2,score:avg});mapping.push({header:c.header,role:'scale',txt:'PALESTRANTE · '+_nm2});}
+          else{var lb=expLabel(c.header);experiencia.push({label:lb,score:avg});mapping.push({header:c.header,role:'scale',txt:'EXPERIÊNCIA · '+lb});}
+        }
       }else{
-        if(/melhorar|melhoria|sugest|negativ|pior/.test(h)){c.values.forEach(function(v){var t=String(v).trim();if(t&&!/^(nada|nao|não|-|n\/a)\.?$/i.test(t))melhoria.push(t);});mapping.push({header:c.header,role:'neg',txt:'MELHORIA'});}
+        if(/melhorar|melhorad|melhoria|aprimor|sugest|negativ|pior|o que faltou|critica|dificuldade/.test(h)){c.values.forEach(function(v){var t=String(v).trim();if(t&&!/^(nada|nao|não|-|n\/a)\.?$/i.test(t))melhoria.push(t);});mapping.push({header:c.header,role:'neg',txt:'MELHORIA'});}
         else if(/gostou|forte|positiv|destaque|importante|melhor.*(evento|palestr)|aprend|marcou/.test(h)){c.values.forEach(function(v){var t=String(v).trim();if(t)positivos.push(t);});mapping.push({header:c.header,role:'pos',txt:'COMENTÁRIO +'});}
         else mapping.push({header:c.header,role:'ignore',txt:'ignorado'});
       }});
@@ -211,14 +246,28 @@
     var mainKey=metricas.satisfacao?'satisfacao':order[0];
     return {n:data.length,metricas:metricas,order:order,mainKey:mainKey,comentarios:{positivos:positivos,melhoria:melhoria},mapping:mapping};
   }
-  var STOP={};'a o e de da do das dos que com para por em no na nos nas um uma os as se ao aos foi ser sao são muito mais menos meu minha nosso nossa ele ela eles elas isso este esta the and eu voce você tudo todo toda todos todas ja já nao não sim como qual quais onde quando pra pro sobre entre tem ter teve era esta está fazer feito'.split(' ').forEach(function(w){STOP[w]=1;});
+  var STOP={};'a o e de da do das dos que com para por em no na nos nas um uma os as se ao aos foi ser sao são muito mais menos meu minha nosso nossa ele ela eles elas isso este esta the and eu voce você tudo todo toda todos todas ja já nao não sim como qual quais onde quando pra pro sobre entre tem ter teve era esta está fazer feito ainda caraca nossa poxa entao então apenas pouco bastante sempre nunca porem porém desde tambem também assim depois antes cada outro outra ate até quase talvez estou enquanto estava estao estão vamos posso pode podem acho achei fiquei ficou'.split(' ').forEach(function(w){STOP[w]=1;});
   function temas(list,n){n=n||4;var f={};list.forEach(function(t){norm(t).replace(/[^a-z\s]/g,' ').split(/\s+/).forEach(function(w){if(w.length>=4&&!STOP[w])f[w]=(f[w]||0)+1;});});return Object.keys(f).map(function(k){return [k,f[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,n).map(function(x){return x[0];});}
+  /* Nem toda pesquisa de hot seat tem pergunta de nota em escala. O Pre-PCE, por exemplo,
+     mede itens categoricos (dificuldade de preencher formulario, erro sistemico). Nesses casos
+     mainKey nao resolve para uma metrica numerica e o render precisa seguir sem media. */
+  function hsMain(enc){
+    var mm=(enc&&enc.metricas&&enc.mainKey)?enc.metricas[enc.mainKey]:null;
+    if(!mm||typeof mm.avg!=='number'||!isFinite(mm.avg)||!mm.scaleMax)return null;
+    return mm;
+  }
   function hsAnalysis(enc,prev){
-    var m=enc.metricas,main=m[enc.mainKey],P=[];
+    var m=enc.metricas||{},main=hsMain(enc),P=[];
     var _pres=(enc.total!=null&&+enc.total>0)?+enc.total:null;
     var _abre=_pres?('<b>'+_pres+'</b> participantes online · <b>'+enc.n+'</b> responderam ('+Math.min(100,pct((enc.n||0)/_pres))+'% de resposta).'):('<b>'+enc.n+' respostas.</b>');
+    if(!main){
+      P.push(_abre+' Esta pesquisa não traz pergunta de nota em escala, então não há média de satisfação para este encontro.');
+      var _tc0=((enc.comentarios&&enc.comentarios.positivos)||[]).length+((enc.comentarios&&enc.comentarios.melhoria)||[]).length;
+      P.push('Leitura possível: <b>'+_tc0+'</b> comentário(s) aberto(s) e a taxa de participação acima.');
+      return {paras:P,temasPos:temas((enc.comentarios&&enc.comentarios.positivos)||[]),temasNeg:temas((enc.comentarios&&enc.comentarios.melhoria)||[])};
+    }
     P.push(_abre+' '+main.label+' média de <b>'+fmt(main.avg)+'/'+main.scaleMax+'</b>, com <b>'+pct(main.topBox)+'%</b> de notas altas'+(main.lowBox>0?' e '+pct(main.lowBox)+'% de notas baixas':'')+'.');
-    if(prev&&prev.metricas[enc.mainKey]){var d=main.avg-prev.metricas[enc.mainKey].avg;var dir=d>0.05?'subiu':(d<-0.05?'caiu':'ficou estável');var cls=d>0.05?'nv-up':(d<-0.05?'nv-down':'');P.push('Frente ao encontro anterior (<b>'+(prev.mentor||prev.turma)+'</b>), a satisfação <span class="'+cls+'">'+dir+(Math.abs(d)>=0.05?' '+fmt(Math.abs(d))+' ponto(s)':'')+'</span>.');}
+    if(prev&&prev.metricas&&prev.metricas[enc.mainKey]){var d=main.avg-prev.metricas[enc.mainKey].avg;var dir=d>0.05?'subiu':(d<-0.05?'caiu':'ficou estável');var cls=d>0.05?'nv-up':(d<-0.05?'nv-down':'');P.push('Frente ao encontro anterior (<b>'+(prev.mentor||prev.turma)+'</b>), a satisfação <span class="'+cls+'">'+dir+(Math.abs(d)>=0.05?' '+fmt(Math.abs(d))+' ponto(s)':'')+'</span>.');}
     else P.push('Primeiro encontro deste tipo — vira a <b>linha de base</b> para os próximos.');
     var dims=enc.order.map(function(k){return m[k];}).filter(Boolean);
     if(dims.length>1){var t=dims.slice().sort(function(a,b){return b.avg-a.avg;})[0],b=dims.slice().sort(function(a,b){return a.avg-b.avg;})[0];P.push('Dimensão mais forte: <b>'+t.label+'</b> ('+fmt(t.avg)+'). Menor nota: <b>'+b.label+'</b> ('+fmt(b.avg)+').');}
@@ -230,13 +279,22 @@
   /* ---------- render ---------- */
   var charts=[];function killCharts(){charts.forEach(function(c){try{c.destroy();}catch(e){}});charts.length=0;}
   var STATE={all:[],tab:'imersao',tipo:'hotseat_pos',imTurma:null};
-  var currentTipo=function(){return STATE.tab==='imersao'?'imersao':STATE.tipo;};
+
+  /* ─── Escopo ────────────────────────────────────────────────────────────────
+     'pce' e a tela de sempre, com Imersao e Hot Seats. 'experts' e a aba NPS
+     Experts: mesma estrutura, so a Imersao, e dados proprios sob o tipo
+     'imersao_experts'. O modulo e um so; o que muda e o escopo e onde o bloco
+     #nv-wrap esta montado. Nenhuma tabela nova no Supabase. */
+  var SCOPE='pce';
+  function tipoIM(){return SCOPE==='experts'?'imersao_experts':'imersao';}
+  function ehExperts(){return SCOPE==='experts';}
+  var currentTipo=function(){return STATE.tab==='imersao'?tipoIM():STATE.tipo;};
   function barRow(label,score,max){var c=scoreColor(score,max);return '<div class="nv-mrow"><div class="nv-mlbl">'+label+'</div><div class="nv-mbar"><div class="nv-mfill" style="width:'+(score/max*100).toFixed(0)+'%;background:'+c+'"></div></div><div class="nv-msc" style="color:'+c+'">'+fmt(score)+'</div></div>';}
 
   function render(){
     killCharts();
     var tipo=currentTipo();
-    if(tipo==='imersao'){renderImersao(imersaoList());return;}
+    if(tipo===tipoIM()){renderImersao(imersaoList());return;}
     var list=STATE.all.filter(function(e){return e.tipo===tipo;}).sort(byDate);
     renderHotseat(list);
   }
@@ -250,6 +308,19 @@
     list.forEach(function(x){h+='<button class="nv-ttab '+(x.id===t.id?'on':'')+'" data-id="'+x.id+'">'+(x.label||x.turma)+'<span>'+(x.sub||x.data_encontro||'')+'</span></button>';});
     h+='</div>';
     var dims=(t.palestrantes||[]).concat(t.experiencia||[]);
+    /* Cada card so aparece se tiver conteudo. Formulario sem coluna de nome de
+       pessoa (o cargo, tipo "treinador", nao conta) simplesmente nao mostra o
+       card de Palestrantes, em vez de exibir um aviso de vazio. */
+    var _pals=(t.palestrantes||[]).slice().sort(function(a,b){return (b.score||0)-(a.score||0);});
+    var _exps=(t.experiencia||[]).slice().sort(function(a,b){return (b.score||0)-(a.score||0);});
+    var _cardPal=_pals.length
+      ? '<div class="nv-card"><div class="nv-ct">Avaliação dos Palestrantes</div><div class="nv-cs" style="margin:-6px 0 10px">Ordenados por nota, do maior para o menor.</div>'
+        +_pals.map(function(p,i){return barRow((i+1)+'\u00ba  '+p.label,p.score,10);}).join('')+'</div>'
+      : '';
+    var _cardExp=_exps.length
+      ? '<div class="nv-card"><div class="nv-ct">Experiência do Evento</div>'
+        +_exps.map(function(p){return barRow(p.label,p.score,10);}).join('')+'</div>'
+      : '';
     var fortesArr=(t.fortes&&t.fortes.length)?t.fortes:dims.slice().sort(function(a,b){return b.score-a.score;}).slice(0,2).map(function(x){return x.label+' ('+fmt(x.score)+')';});
     var melhoriaArr=(t.melhoria&&t.melhoria.length)?t.melhoria:dims.slice().sort(function(a,b){return a.score-b.score;}).slice(0,2).map(function(x){return x.label+' ('+fmt(x.score)+')';});
     var recCol=scoreColor(t.recomenda,10),circ=2*Math.PI*66,off=circ-circ*(t.recomenda/10);
@@ -263,7 +334,7 @@
       +(_imTaxa!=null?'<div class="nv-imstat"><div class="nv-imstat-n">'+_imTaxa+'%</div><div class="nv-imstat-l">Taxa de resposta</div></div>':'')
       +'</div>'
       +((_imTot==null&&_imRsp==null)?'<div class="nv-imstat-warn">Participantes não informados — clique no ✎ para incluir.</div>':'');
-    h+='<div class="nv-imhero"><div class="nv-card"><div class="nv-ct" style="text-align:center">Recomendação (0–10)</div><div class="nv-ring"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="11"/><circle cx="75" cy="75" r="66" fill="none" stroke="'+recCol+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/></svg><div class="nv-ringc"><div class="nv-ringn" style="color:'+recCol+'">'+fmt(t.recomenda)+'</div></div></div>'+_imStats+'<div class="nv-cs" style="text-align:center;margin:8px 0 0">'+(t.label||t.turma)+' · '+(t.sub||'')+'</div><div class="nv-fortes"><div class="nv-fh" style="color:#46d160">Pontos Fortes</div>'+fortesArr.map(function(x){return '<div class="nv-fi"><span style="color:#46d160">✓</span> '+x+'</div>';}).join('')+'<div class="nv-fh" style="color:#f5c542">Pontos de Melhoria</div>'+melhoriaArr.map(function(x){return '<div class="nv-fi"><span style="color:#f5c542">▲</span> '+x+'</div>';}).join('')+'</div></div><div class="nv-imcols"><div class="nv-card"><div class="nv-ct">Avaliação dos Palestrantes</div>'+((t.palestrantes||[]).map(function(p){return barRow(p.label,p.score,10);}).join('')||'<div class="nv-cs">Sem palestrantes no arquivo.</div>')+'</div><div class="nv-card"><div class="nv-ct">Experiência do Evento</div>'+((t.experiencia||[]).map(function(p){return barRow(p.label,p.score,10);}).join('')||'<div class="nv-cs">Sem itens de experiência.</div>')+'</div></div></div>';
+    h+='<div class="nv-imhero"><div class="nv-card"><div class="nv-ct" style="text-align:center">Recomendação (0–10)</div><div class="nv-ring"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="11"/><circle cx="75" cy="75" r="66" fill="none" stroke="'+recCol+'" stroke-width="11" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/></svg><div class="nv-ringc"><div class="nv-ringn" style="color:'+recCol+'">'+fmt(t.recomenda)+'</div></div></div>'+_imStats+'<div class="nv-cs" style="text-align:center;margin:8px 0 0">'+(t.label||t.turma)+' · '+(t.sub||'')+'</div><div class="nv-fortes"><div class="nv-fh" style="color:#46d160">Pontos Fortes</div>'+fortesArr.map(function(x){return '<div class="nv-fi"><span style="color:#46d160">✓</span> '+x+'</div>';}).join('')+'<div class="nv-fh" style="color:#f5c542">Pontos de Melhoria</div>'+melhoriaArr.map(function(x){return '<div class="nv-fi"><span style="color:#f5c542">▲</span> '+x+'</div>';}).join('')+'</div></div><div class="nv-imcols">'+_cardPal+_cardExp+'</div></div>';
     var _posArr=(t.comentarios&&t.comentarios.positivos)||[],_negArr=(t.comentarios&&t.comentarios.melhoria)||[];
     var pos=cmBox(_posArr,false,'Sem comentários.');
     var neg=cmBox(_negArr,true,'Nenhum ponto de melhoria.');
@@ -318,7 +389,7 @@
     var dims=['satisfacao','relevancia','conteudo'].filter(function(k){return rank.some(function(e){return e.metricas[k];});});
     h+='<div class="nv-ranktbl"><table class="nv-rank"><thead><tr><th>#</th><th>Mentor</th><th>Turma</th><th>Data</th>'
       +dims.map(function(k){return '<th class="num">'+(SHORT_DIM[k]||k)+'</th>';}).join('')
-      +'<th class="num">Resp.</th></tr></thead><tbody>';
+      +'<th class="num">Resp.</th><th class="num">Online</th></tr></thead><tbody>';
     rank.forEach(function(e,i){
       var m=e.metricas[key];
       var pos=(i===0)?'\u{1F947}':(i===1)?'\u{1F948}':(i===2&&n>3)?'\u{1F949}':(i+1)+'\u00BA';
@@ -328,7 +399,11 @@
       h+='<tr'+(i===n-1&&n>2?' class="last"':'')+'><td class="pos">'+pos+'</td><td class="mt">'+esc(e.mentor||'—')+'</td><td><span class="nv-turma">'+esc(e.turma||'—')+'</span></td><td class="dt">'+(e.data_encontro||'—')+'</td>';
       dims.forEach(function(k){var mm=e.metricas[k];
         h+='<td class="num"'+(mm?' style="color:'+scoreColor(mm.avg,mm.scaleMax)+';font-weight:700"':'')+'>'+(mm?fmt(mm.avg):'—')+'</td>';});
-      h+='<td class="num">'+(e.n||'—')+'</td></tr>';
+      var _onl=(e.total!=null&&+e.total>0)?+e.total:null;
+      h+='<td class="num">'+(e.n||'—')+'</td>'
+        +'<td class="num">'+(_onl!=null?_onl:'—')
+        +(isAdm()?'<button class="nv-onledit" data-edit-total="'+e.id+'" title="Editar participantes online">✎</button>':'')
+        +'</td></tr>';
     });
     h+='</tbody></table></div>';
 
@@ -365,6 +440,43 @@
     h+='</div>';
     return {html:h,rank:rank,dims:dims,media:media};
   }
+  /* Painel enxuto para pesquisas sem nota em escala (Pre-PCE). Sem media, sem
+     ranking e sem grafico comparativo, porque nao ha o que ranquear: mostra
+     volume, participacao e os temas que aparecem nos comentarios. */
+  function hsPainelSemNota(list,tipoLbl){
+    var n=list.length,totResp=0,totPart=0,semPart=0,pos=[],neg=[];
+    list.forEach(function(e){
+      totResp+=(+e.n||0);
+      if(e.total!=null&&+e.total>0)totPart+=+e.total;else semPart++;
+      pos=pos.concat((e.comentarios&&e.comentarios.positivos)||[]);
+      neg=neg.concat((e.comentarios&&e.comentarios.melhoria)||[]);
+    });
+    var taxa=(totPart>0&&semPart===0)?Math.min(100,Math.round(totResp/totPart*100)):null;
+    var h='<div class="nv-card"><div class="nv-ct">Painel gerencial \u2014 '+esc(tipoLbl)+'</div>'
+      +'<div class="nv-cs">Esta pesquisa n\u00e3o tem pergunta de nota em escala, ent\u00e3o n\u00e3o h\u00e1 m\u00e9dia nem ranking de mentor. O que d\u00e1 para medir aqui \u00e9 alcance, participa\u00e7\u00e3o e o que as pessoas escreveram.</div>';
+    h+='<div class="nv-kpis">'
+      +kpiBox(n,'Encontros','')
+      +kpiBox(totPart||'\u2014','Participantes online','')
+      +kpiBox(totResp,'Respostas','')
+      +(taxa!=null?kpiBox(taxa+'%','Taxa de resposta',''):'')
+      +kpiBox(pos.length+neg.length,'Coment\u00e1rios abertos','')
+      +'</div>';
+    var tp=temas(pos,6),tn=temas(neg,6);
+    if(tp.length||tn.length){
+      h+='<div class="nv-tags" style="margin-top:14px">'
+        +tp.map(function(x){return '<span class="nv-tag">'+esc(x)+'</span>';}).join('')
+        +tn.map(function(x){return '<span class="nv-tag nv-tagneg">'+esc(x)+'</span>';}).join('')
+        +'</div>';
+    }
+    var P=[];
+    P.push('<b>'+n+' encontro'+(n>1?'s':'')+'</b> nesta modalidade, com <b>'+totResp+'</b> resposta'+(totResp===1?'':'s')
+      +(taxa!=null?' de <b>'+totPart+'</b> participantes (<b>'+taxa+'%</b> de resposta)':'')+'.');
+    P.push('Leitura poss\u00edvel: <b>'+pos.length+'</b> coment\u00e1rio(s) positivo(s) e <b>'+neg.length+'</b> ponto(s) de melhoria. '
+      +'Os cards abaixo trazem o texto na \u00edntegra.');
+    h+='<div class="nv-analise" style="margin-top:16px"><div class="nv-antitle">Leitura gerencial</div>'
+      +P.map(function(x){return '<div class="nv-anp">'+x+'</div>';}).join('')+'</div>';
+    return h+'</div>';
+  }
   function renderHotseat(list){
     var host=$('nv-content');
     if(!list.length){host.innerHTML='<div class="nv-empty">Nenhum hot seat deste tipo ainda.<br><b>Suba um CSV</b> ou clique em Carregar exemplo (Renata + Iane).</div>';return;}
@@ -373,9 +485,10 @@
     var _tipoLbl=(STATE.tipo==='hotseat_pre')?'Hot Seats Pré-PCE':'Hot Seats Pós-PCE';
     var _pn=hsPainel(list,key,_tipoLbl);
     var _rank=_pn.rank||[];
-    html+=_pn.html||'';
+    html+=_pn.html||hsPainelSemNota(list,_tipoLbl);
     list.forEach(function(enc,i){
-      var prev=i>0?list[i-1]:null,an=hsAnalysis(enc,prev),main=enc.metricas[enc.mainKey],col=scoreColor(main.avg,main.scaleMax);
+      var prev=i>0?list[i-1]:null,an=hsAnalysis(enc,prev);
+      var main=hsMain(enc),col=main?scoreColor(main.avg,main.scaleMax):'var(--mut)';
       /* Participantes online do encontro (enc.total) x quem respondeu (enc.n). */
       var _hsTot=(enc.total!=null&&+enc.total>0)?+enc.total:null;
       var _hsRsp=(enc.n!=null&&+enc.n>0)?+enc.n:null;
@@ -386,12 +499,17 @@
         +(_hsTaxa!=null?'<div class="nv-imstat"><div class="nv-imstat-n">'+_hsTaxa+'%</div><div class="nv-imstat-l">Taxa de resposta</div></div>':'')
         +'</div>'
         +(_hsTot==null?'<div class="nv-imstat-warn" style="text-align:left;margin:-6px 0 12px">Participantes online não informados — clique no ✎ para incluir.</div>':'');
-      var circ=2*Math.PI*66,off=circ-circ*(main.avg/main.scaleMax);
-      var mrows=enc.order.map(function(k){return barRow(enc.metricas[k].label,enc.metricas[k].avg,enc.metricas[k].scaleMax);}).join('');
+      var circ=2*Math.PI*66,off=main?(circ-circ*(main.avg/main.scaleMax)):circ;
+      var mrows=(enc.order||[]).map(function(k){var mm=enc.metricas&&enc.metricas[k];
+        return (mm&&typeof mm.avg==='number'&&isFinite(mm.avg)&&mm.scaleMax)?barRow(mm.label||k,mm.avg,mm.scaleMax):'';}).join('');
+      var _hsHero=main
+        ? '<div class="nv-hero"><div class="nv-ring"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/><circle cx="75" cy="75" r="66" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/></svg><div class="nv-ringc"><div class="nv-ringn" style="color:'+col+'">'+fmt(main.avg)+'</div><div class="nv-ringl">'+String(main.label||'').split(' ')[0]+' · /'+main.scaleMax+'</div></div></div><div style="display:flex;flex-direction:column">'+mrows+'</div></div>'
+        : (mrows?'<div class="nv-hero"><div style="display:flex;flex-direction:column;width:100%">'+mrows+'</div></div>':'')
+          +'<div class="nv-imstat-warn" style="text-align:left;margin:0 0 12px">Pesquisa sem pergunta de nota em escala — sem anel de satisfação. Participação e comentários abaixo.</div>';
       var _posArr=enc.comentarios.positivos||[],_negArr=enc.comentarios.melhoria||[];
       var pos=cmBox(_posArr,false,'Sem comentários.');
       var neg=cmBox(_negArr,true,'Nenhum ponto de melhoria.');
-      html+='<div class="nv-card"><div class="nv-enchead"><div><div class="nv-enctitle">'+(enc.mentor||'Encontro')+'</div><div class="nv-encmeta">'+(enc.turma||'')+' · '+(enc.tipo||'').replace('hotseat_pos','Hot Seat · Pós-PCE').replace('hotseat_pre','Hot Seat · Pré-PCE')+' · '+(enc.data_encontro||'')+(String(enc.id||'').indexOf('loc_')===0?' · <span class="nv-locbadge">SÓ NESTE NAVEGADOR</span>':'')+'</div></div>'+'<div class="nv-encacts"><button class="nv-encpng" data-png="'+enc.id+'" title="Baixar este relatório em PNG">\u2913 PNG</button>'+(isAdm()?'<button class="nv-encdel" data-del="'+enc.id+'">excluir</button>':'')+'</div></div>'+_hsStats+'<div class="nv-hero"><div class="nv-ring"><svg viewBox="0 0 150 150"><circle cx="75" cy="75" r="66" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/><circle cx="75" cy="75" r="66" fill="none" stroke="'+col+'" stroke-width="10" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/></svg><div class="nv-ringc"><div class="nv-ringn" style="color:'+col+'">'+fmt(main.avg)+'</div><div class="nv-ringl">'+main.label.split(' ')[0]+' · /'+main.scaleMax+'</div></div></div><div style="display:flex;flex-direction:column">'+mrows+'</div></div><div class="nv-analise"><div class="nv-antitle">Análise automática</div>'+an.paras.map(function(p){return '<div class="nv-anp">'+p+'</div>';}).join('')+((an.temasPos.length||an.temasNeg.length)?'<div class="nv-tags">'+an.temasPos.map(function(x){return '<span class="nv-tag">'+x+'</span>';}).join('')+an.temasNeg.map(function(x){return '<span class="nv-tag nv-tagneg">'+x+'</span>';}).join('')+'</div>':'')+'</div><div class="nv-comments" style="margin-top:16px"><div>'+cmH('Positivos','#46d160',_posArr)+pos+'</div><div>'+cmH('Pontos de melhoria','#f5c542',_negArr)+neg+'</div></div></div>';
+      html+='<div class="nv-card"><div class="nv-enchead"><div><div class="nv-enctitle">'+(enc.mentor||'Encontro')+'</div><div class="nv-encmeta">'+(enc.turma||'')+' · '+(enc.tipo||'').replace('hotseat_pos','Hot Seat · Pós-PCE').replace('hotseat_pre','Hot Seat · Pré-PCE')+' · '+(enc.data_encontro||'')+(String(enc.id||'').indexOf('loc_')===0?' · <span class="nv-locbadge">SÓ NESTE NAVEGADOR</span>':'')+'</div></div>'+'<div class="nv-encacts"><button class="nv-encpng" data-png="'+enc.id+'" title="Baixar este relatório em PNG">\u2913 PNG</button>'+(isAdm()?'<button class="nv-encdel" data-del="'+enc.id+'">excluir</button>':'')+'</div></div>'+_hsStats+_hsHero+'<div class="nv-analise"><div class="nv-antitle">Análise automática</div>'+an.paras.map(function(p){return '<div class="nv-anp">'+p+'</div>';}).join('')+((an.temasPos.length||an.temasNeg.length)?'<div class="nv-tags">'+an.temasPos.map(function(x){return '<span class="nv-tag">'+x+'</span>';}).join('')+an.temasNeg.map(function(x){return '<span class="nv-tag nv-tagneg">'+x+'</span>';}).join('')+'</div>':'')+'</div><div class="nv-comments" style="margin-top:16px"><div>'+cmH('Positivos','#46d160',_posArr)+pos+'</div><div>'+cmH('Pontos de melhoria','#f5c542',_negArr)+neg+'</div></div></div>';
     });
     host.innerHTML=html;
     var canvas=$('nv-hs-cmp');
@@ -620,17 +738,23 @@
   (function(){var sel=$('nv-m-mentor-sel');sel.innerHTML='<option value="">Selecione o mentor…</option>'+MENTORES.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')+'<option value="__outro">Outro…</option>';sel.addEventListener('change',function(){$('nv-m-mentor-other').style.display=sel.value==='__outro'?'':'none';});$('nv-m-tipo').addEventListener('change',function(){toggleFields();if(LAST_CSV)processFile(LAST_CSV);});})();
   function toggleFields(){var im=$('nv-m-tipo').value==='imersao';$('nv-m-mentor-fld').style.display=im?'none':'';$('nv-m-total-fld').style.display=im?'':'none';var pf=$('nv-m-presentes-fld');if(pf)pf.style.display=im?'none':'';}
   function mentorValue(){var s=$('nv-m-mentor-sel').value;return s==='__outro'?$('nv-m-mentor-other').value.trim():s;}
-  function openModal(){modal.classList.add('on');$('nv-m-tipo').value=currentTipo()==='imersao'?'imersao':STATE.tipo;toggleFields();}
+  function openModal(){
+    modal.classList.add('on');
+    var sel=$('nv-m-tipo');
+    if(ehExperts()){sel.value='imersao';sel.disabled=true;}
+    else{sel.disabled=false;sel.value=(STATE.tab==='imersao')?'imersao':STATE.tipo;}
+    toggleFields();
+  }
   function closeModal(){modal.classList.remove('on');PENDING=null;LAST_CSV='';$('nv-m-file').value='';$('nv-m-mentor-sel').value='';$('nv-m-mentor-other').value='';$('nv-m-mentor-other').style.display='none';var pv=$('nv-m-presentes');if(pv)pv.value='';$('nv-m-map-wrap').style.display='none';$('nv-m-confirm').disabled=true;}
   $('nv-btn-upload').onclick=openModal;$('nv-m-cancel').onclick=closeModal;modal.addEventListener('click',function(e){if(e.target===modal)closeModal();});
   $('nv-m-file').addEventListener('change',function(e){var f=e.target.files[0];if(!f)return;var rd=new FileReader();rd.onload=function(){LAST_CSV=rd.result;processFile(LAST_CSV);};rd.readAsText(f,'UTF-8');});
   function processFile(text){var warn=$('nv-m-warn');warn.textContent='';try{var rows=parseCSV(text);if(rows.length<2){warn.textContent='Arquivo sem respostas.';return;}var im=$('nv-m-tipo').value==='imersao';PENDING=im?analyzeImersao(rows):analyzeHotseat(rows);$('nv-m-map').innerHTML=PENDING.mapping.map(function(mp){var cls=mp.role==='scale'?'nv-r-scale':mp.role==='pos'?'nv-r-pos':mp.role==='neg'?'nv-r-neg':'nv-r-ignore';return '<div class="nv-maprow"><div class="nv-mapq" title="'+esc(mp.header)+'">'+(esc(mp.header)||'(sem título)')+'</div><div class="nv-maprole '+cls+'">'+mp.txt+'</div></div>';}).join('');$('nv-m-map-wrap').style.display='';var ok=im?(PENDING.recomenda!=null||PENDING.palestrantes.length||PENDING.experiencia.length):PENDING.order.length;$('nv-m-confirm').disabled=!ok;if(!ok)warn.textContent=im?'⚠ Nenhuma nota (0–10) detectada.':'⚠ Nenhuma coluna de nota detectada.';}catch(err){warn.textContent='Erro ao ler CSV: '+err.message;}}
   $('nv-m-confirm').onclick=async function(){if(!PENDING)return;var tipo=$('nv-m-tipo').value,turma=$('nv-m-turma').value.trim(),data=$('nv-m-data').value||new Date().toISOString().slice(0,10),row;
-    if(PENDING._im){row={tipo:'imersao',turma:turma,label:turma,sub:'',data_encontro:data,resps:PENDING.n,total:+$('nv-m-total').value||null,recomenda:PENDING.recomenda,palestrantes:PENDING.palestrantes,experiencia:PENDING.experiencia,comentarios:PENDING.comentarios,created_by_name:'admin'};}
+    if(PENDING._im){row={tipo:tipoIM(),turma:turma,label:turma,sub:'',data_encontro:data,resps:PENDING.n,total:+$('nv-m-total').value||null,recomenda:PENDING.recomenda,palestrantes:PENDING.palestrantes,experiencia:PENDING.experiencia,comentarios:PENDING.comentarios,created_by_name:'admin'};}
     else{row={tipo:tipo,turma:turma,mentor:mentorValue(),data_encontro:data,n_respostas:PENDING.n,total:+$('nv-m-presentes').value||null,metricas:PENDING.metricas,order:PENDING.order,mainKey:PENDING.mainKey,comentarios:PENDING.comentarios,created_by_name:'admin'};}
     var _saved=await insertRow(row);
     if(_saved&&_saved.__local){alert('ATENÇÃO: este encontro foi salvo APENAS neste navegador (localStorage) — NÃO foi para o Supabase.\n\nMotivo: '+(window.__npsLastErr||'desconhecido')+'\n\nOutras pessoas não vão ver este dado e ele some se o navegador for limpo. Verifique se você está logado com um usuário admin e suba a pesquisa novamente.');}
-    closeModal();if(tipo==='imersao'){STATE.tab='imersao';STATE.imTurma=null;}else{STATE.tab='hotseat';STATE.tipo=tipo;}syncTabs();boot();};
+    closeModal();if(tipo==='imersao'||tipo==='imersao_experts'){STATE.tab='imersao';STATE.imTurma=null;}else{STATE.tab='hotseat';STATE.tipo=tipo;}syncTabs();boot();};
 
   /* ---------- demo hot seats (Renata + Iane, dados reais) ---------- */
   var DEMO_RENATA='Carimbo de data/hora,Você ficou satisfeito com o encontro?,O encontro foi relevante e útil para sua empresa?,Quais foram os pontos mais importantes do encontro,Você ficou satisfeito com o conteúdo do encontro?,Nome (opcional)\n11/06/2026 11:39:42,5,5,Vibracao personagem coach,5,Regina Kerber\n11/06/2026 11:41:14,1,1,,1,\n11/06/2026 11:41:26,1,1,Esperava mais do encontro nao foi pratico ficou muito na conversa,1,\n11/06/2026 11:41:55,5,4,sugestoes de pontos a melhorar,4,Adair Carvalho\n11/06/2026 11:41:56,4,5,Excelencia construida por pequenas decisoes cultura,4,Abimael\n11/06/2026 11:42:38,2,2,Nao contribuiu com todos os presentes tema pouco amplo,2,\n11/06/2026 11:46:16,5,5,liberdade de comunicacao interatividade e cases reais,5,Marcio\n11/06/2026 11:55:23,3,2,As percepcoes da Renata,3,Marta\n11/06/2026 11:56:28,4,4,Situacoes chaves que abriram portas,5,Leandro\n11/06/2026 12:11:41,3,3,empresarios dando solucoes uns para os outros,3,Eliss\n11/06/2026 12:34:49,5,5,Escutar as empresas e dicas que cabem pra nos,5,Maria Jonilde\n11/06/2026 12:52:08,3,3,pensei que fosse mais implementacao do que conteudo,3,Luciana\n11/06/2026 14:22:09,5,5,Insights com a participacao dos alunos e dicas da Renata,5,Rosa\n11/06/2026 15:13:15,5,5,Troca de experiencia entre os alunos falar e ouvir,5,Vanessa\n12/06/2026 13:41:30,1,2,Pouco conteudo e muita conversa,2,\n12/06/2026 15:51:37,4,4,Estrategias para alavancar vendas,4,Marcos';
@@ -669,7 +793,52 @@
   /* Normaliza Hot Seats para apresentação em escala 0–10 (notas coletadas em 0–5 são reescaladas ×2).
      Também resolve enc.n a partir de n_respostas ao recarregar do banco. Não toca imersão (0–10). */
   function normalizeHS(list){list.forEach(function(e){if(!e||!e.metricas)return;if(e.n==null&&e.n_respostas!=null)e.n=e.n_respostas;if(e.__norm10)return;Object.keys(e.metricas).forEach(function(k){var m=e.metricas[k];if(m&&+m.scaleMax===5){m.avg=m.avg*2;m.scaleMax=10;}});e.__norm10=true;});}
-  async function boot(){STATE.all=await listAll();normalizeHS(STATE.all);render();try{syncDemoBtn();}catch(e){}}
+  /* Registros de imersao ja gravados no banco vieram do classificador antigo, com os
+     palestrantes misturados na Experiencia do Evento. Aqui eles sao devolvidos ao lugar
+     certo na leitura, sem reescrever nada no Supabase, e ordenados por nota. */
+  function normalizeIM(list){
+    list.forEach(function(e){
+      if(!e||!e._im&&e.tipo!=='imersao'&&e.tipo!=='imersao_experts')return;
+      if(e.__normIM)return;
+      var pal=(e.palestrantes||[]).slice(),exp=[];
+      (e.experiencia||[]).forEach(function(it){
+        var nm=it&&it.label?nomePalestrante(it.label):null;
+        if(nm)pal.push({label:nm,score:it.score});
+        else exp.push(it);
+      });
+      var ord=function(a,b){return (b.score||0)-(a.score||0);};
+      e.palestrantes=pal.sort(ord);
+      e.experiencia=exp.sort(ord);
+      e.__normIM=true;
+    });
+  }
+  /* Move o bloco da tela para a pagina pedida e ajusta o escopo. Mover o no
+     preserva listeners; nada e recriado. O modal e fixo em tela cheia, entao vai
+     uma vez para o body e nunca mais precisa acompanhar. */
+  window.__npsMount=function(escopo,hostId){
+    try{
+      var wrap=document.getElementById('nv-wrap');
+      var host=document.getElementById(hostId);
+      if(wrap&&host&&wrap.parentNode!==host)host.appendChild(wrap);
+      var md=document.getElementById('nv-modal');
+      if(md&&md.parentNode!==document.body)document.body.appendChild(md);
+      SCOPE=(escopo==='experts')?'experts':'pce';
+      var sl=document.querySelector('#nv-wrap .nv-sl'),sb=document.querySelector('#nv-wrap .nv-sub');
+      if(sl)sl.textContent=ehExperts()?'NPS \u2014 Experts':'NPS \u2014 Satisfa\u00e7\u00e3o';
+      if(sb)sb.textContent=ehExperts()
+        ?'Avalia\u00e7\u00e3o das imers\u00f5es pelos experts. Cada turma \u00e9 uma aba. Suba a pesquisa e tudo se atualiza e acumula.'
+        :'Imers\u00e3o e Hot Seats num s\u00f3 lugar. Cada turma da imers\u00e3o \u00e9 uma aba; cada hot seat \u00e9 um card. Suba a pesquisa e tudo se atualiza e acumula.';
+      /* No escopo Experts existe so a Imersao: as abas e o seletor Pre/Pos somem. */
+      var st=document.getElementById('nv-subtabs');if(st)st.style.display=ehExperts()?'none':'';
+      if(ehExperts()){
+        STATE.tab='imersao';STATE.imTurma=null;
+        var pp=document.getElementById('nv-prepos');if(pp)pp.classList.add('hidden');
+      }
+      try{syncTabs();}catch(e){}
+      boot();
+    }catch(e){if(window.console)console.warn('[NPS] mount: '+e.message);}
+  };
+  async function boot(){STATE.all=await listAll();normalizeHS(STATE.all);normalizeIM(STATE.all);normalizeIM(BASELINE);render();try{syncDemoBtn();}catch(e){}}
   $('nv-m-data').value=new Date().toISOString().slice(0,10);
   syncTabs();boot();
   document.addEventListener('DOMContentLoaded',function(){setTimeout(boot,60);}); // Chart.js (defer) já carregado
