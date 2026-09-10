@@ -109,6 +109,7 @@ JS_LABELS = [
     (r"C=\{arch:",                  "fb-board"),
     (r'ESTOQUE PCE',                "estoque-pce"),
     (r'Reorganiza',                 "reorganizacao"),
+    (r'AUDITORIA DE PERSONALIZADOS', "auditoria-personalizados"),
     (r'window\.__loadManualDeps\s*=', "manual-deps"),
 ]
 
