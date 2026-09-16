@@ -1,7 +1,7 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.2.0';
+const PCE_VERSION = '3.2.4';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
@@ -646,8 +646,25 @@ async function fetchAllData(silent=false){
     }
   }
 }
-const G='#63F858',G2='#243d26',G3='#4bc943',AM='#f5c542',RD='#ff5f5f',BL='#4d9fff',CR='#EAE5E1';
-const PAL=[G,BL,AM,RD,'#a78bfa','#f472b6','#2dd4bf','#fb923c',G2,'#facc15','#34d399','#60a5fa'];
+const G='#63F858',G2='#243d26',G3='#4bc943',AM='#f5c542',RD='#ff5f5f',BL='rgba(99,248,88,.5)',CR='#EAE5E1';
+const PCE_CAT=[
+  G,
+  'rgba(99,248,88,.62)',
+  'rgba(99,248,88,.40)',
+  CR,
+  'rgba(99,248,88,.82)',
+  'rgba(99,248,88,.26)',
+  'rgba(234,229,225,.55)',
+  'rgba(99,248,88,.50)',
+  'rgba(99,248,88,.16)',
+  'rgba(234,229,225,.32)',
+  'rgba(99,248,88,.72)',
+  'rgba(99,248,88,.34)'
+];
+function pceColors(n){var o=[];for(var i=0;i<n;i++)o.push(PCE_CAT[i%PCE_CAT.length]);return o;}
+// nota 0-10: verde se >=8, ambar se >=6, senao vermelho
+function pceScore(v){var x=parseFloat(String(v).replace(',','.'));return x>=8?G:(x>=6?AM:RD);}
+const PAL=PCE_CAT.slice();
 const CHART_REGISTRY={};
 const LC='#adada8',GC='rgba(255,255,255,.035)';
 const TOOLTIP_DEFAULTS={backgroundColor:'#1a1a18',borderColor:'rgba(99,248,88,.12)',borderWidth:1,titleColor:CR,bodyColor:'#7a7a76',titleFont:{family:'Barlow',weight:'600',size:12},bodyFont:{family:'Barlow',size:12},padding:10};
@@ -777,9 +794,34 @@ function barLabelsPlugin(formatter, options) {
     }
   };
 }
+// LOTE 2 · cobertura agregada por secao no Perfil
+var _PERFIL_SEC = {
+  cReligiao:'sec-familia',
+  cSeg:'sec-negocio', cEst:'sec-negocio',
+  cColabs:'sec-gestao', cOrg:'sec-gestao', cCanal:'sec-gestao',
+  cGen:'sec-participantes', cCli:'sec-participantes', cAval:'sec-participantes', cIA:'sec-participantes',
+  cFaixaEt:'sec-demografia', cFaixaFat:'sec-demografia'
+};
+function setCoberturaSecao(secId, totalAnalisado, totalBase){
+  var head = document.getElementById(secId);
+  if(!head || totalBase<=0) return;
+  var pct = Math.round(totalAnalisado/totalBase*100);
+  // guarda a MENOR cobertura vista na secao (pior caso), para nao declarar 100% indevido
+  var prev = parseInt(head.getAttribute('data-cov-pct')||'101',10);
+  if(pct < prev){
+    head.setAttribute('data-cov-pct', pct);
+    var badge = head.querySelector('.sec-cov');
+    if(!badge){ badge=document.createElement('span'); badge.className='sec-cov'; head.appendChild(badge); }
+    badge.innerHTML = totalAnalisado+' de '+totalBase+' · '+pct+'% cobertura';
+  } else if(!head.querySelector('.sec-cov')){
+    var b2=document.createElement('span'); b2.className='sec-cov'; b2.innerHTML=totalAnalisado+' de '+totalBase+' · '+pct+'% cobertura'; head.appendChild(b2);
+    head.setAttribute('data-cov-pct', pct);
+  }
+}
 function appendCobertura(canvasId, totalAnalisado, totalBase, motivo) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  if (_PERFIL_SEC[canvasId]) { setCoberturaSecao(_PERFIL_SEC[canvasId], totalAnalisado, totalBase); return; }
   let card = canvas.parentElement;
   while (card && !card.classList.contains('card') && !card.classList.contains('carf')) {
     card = card.parentElement;
@@ -1184,16 +1226,16 @@ function renderViewUs(){
     <div style="background:rgba(255,255,255,.07);height:120px;margin:0 4px"></div>
     <div style="padding:0 32px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-        <div style="width:10px;height:10px;border-radius:50%;background:#a78bfa;flex-shrink:0;box-shadow:0 0 8px rgba(167,139,250,.4)"></div>
-        <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#a78bfa">🇧🇷 Orlando + Brasil</div>
+        <div style="width:10px;height:10px;border-radius:50%;background:rgba(99,248,88,.55);flex-shrink:0;box-shadow:0 0 8px rgba(167,139,250,.4)"></div>
+        <div style="font-size:10px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgba(99,248,88,.55)">🇧🇷 Orlando + Brasil</div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:16px">Confirmados nos dois eventos</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:800;line-height:1;color:#a78bfa">${brUsFinal}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:80px;font-weight:800;line-height:1;color:rgba(99,248,88,.55)">${brUsFinal}</div>
       <div style="font-size:11px;color:var(--muted);margin-top:6px;margin-bottom:14px">participantes confirmados</div>
       <div style="background:rgba(167,139,250,.08);border-radius:6px;height:6px;overflow:hidden;margin-bottom:8px">
-        <div style="height:100%;border-radius:6px;background:#a78bfa;width:${brUsPct}%;transition:width 1.2s cubic-bezier(.4,0,.2,1)"></div>
+        <div style="height:100%;border-radius:6px;background:rgba(99,248,88,.55);width:${brUsPct}%;transition:width 1.2s cubic-bezier(.4,0,.2,1)"></div>
       </div>
-      <div style="font-size:13px;font-weight:700;color:#a78bfa">${brUsPct}% dos confirmados</div>
+      <div style="font-size:13px;font-weight:700;color:rgba(99,248,88,.55)">${brUsPct}% dos confirmados</div>
     </div>
     <div style="background:rgba(255,255,255,.07);height:120px;margin:0 4px"></div>
     <div style="padding-left:32px;display:flex;flex-direction:column;gap:16px">
@@ -1209,11 +1251,11 @@ function renderViewUs(){
       </div>
       <div>
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
-          <span style="font-size:11px;color:#a78bfa">🇧🇷 Orlando + Brasil</span>
-          <span style="font-size:11px;font-weight:700;color:#a78bfa">${brUsPct}%</span>
+          <span style="font-size:11px;color:rgba(99,248,88,.55)">🇧🇷 Orlando + Brasil</span>
+          <span style="font-size:11px;font-weight:700;color:rgba(99,248,88,.55)">${brUsPct}%</span>
         </div>
         <div style="background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden">
-          <div style="height:100%;border-radius:4px;background:#a78bfa;width:${brUsPct}%;transition:width 1.2s cubic-bezier(.4,0,.2,1)"></div>
+          <div style="height:100%;border-radius:4px;background:rgba(99,248,88,.55);width:${brUsPct}%;transition:width 1.2s cubic-bezier(.4,0,.2,1)"></div>
         </div>
       </div>
       <div style="font-size:10px;color:var(--muted2);margin-top:4px">% sobre o total de confirmados</div>
@@ -1497,9 +1539,27 @@ function _perfilSrc(){
   return store.br;
 }
 function _isStandaloneInsights(){return _isStandalonePerfil();}
+/* LOTE 2 · navegacao por chips no Perfil */
+function perfilGo(secId, btn){
+  if(btn){document.querySelectorAll('.pchip').forEach(function(c){c.classList.remove('active');});btn.classList.add('active');}
+  try{if(typeof showPerfilSub==='function')showPerfilSub('perfil');}catch(e){}
+  var el=document.getElementById(secId);
+  if(el){var cont=document.querySelector('.content')||window;
+    var y=el.getBoundingClientRect().top+(cont.scrollTop||0)-72;
+    if(cont.scrollTo)cont.scrollTo({top:y,behavior:'smooth'});else window.scrollTo(0,y);}
+}
+function _perfilScrollSpy(){
+  var cont=document.querySelector('.content');if(!cont)return;
+  var secs=['sec-familia','sec-negocio','sec-gestao','sec-participantes','sec-demografia'];
+  var top=cont.scrollTop+90,cur=secs[0];
+  secs.forEach(function(id){var e=document.getElementById(id);if(e&&e.offsetTop<=top)cur=id;});
+  document.querySelectorAll('.pchip').forEach(function(c){c.classList.toggle('active',c.getAttribute('data-sec')===cur);});
+}
+(function(){var c=document.querySelector('.content');if(c)c.addEventListener('scroll',function(){if(window.__spyRAF)return;window.__spyRAF=requestAnimationFrame(function(){window.__spyRAF=null;var pp=document.getElementById('page-perfil');if(pp&&pp.classList.contains('active')&&pp.classList.contains('standalone'))_perfilScrollSpy();});},{passive:true});})();
 function showPerfilSub(which){var pb=document.getElementById('perfil-body'),pi=document.getElementById('page-insights'),bp=document.getElementById('psub-perfil'),bi=document.getElementById('psub-insights');var ins=(which==='insights');if(pb)pb.style.display=ins?'none':'';if(pi){pi.classList.toggle('active',ins);pi.classList.toggle('as-subtab',ins);}if(bp)bp.classList.toggle('active',!ins);if(bi)bi.classList.toggle('active',ins);if(ins&&window.renderInsightsCorrelacionais){setTimeout(window.renderInsightsCorrelacionais,60);}}
 function buildPerfil() {
   if(typeof _isStandalonePerfil==='function' && _isStandalonePerfil() && !(_perfilSrc().rows||[]).length){var _pbE=document.getElementById('perfil-body');if(_pbE&&window.__perfilPristineHTML!=null)_pbE.innerHTML=window.__perfilPristineHTML;return;}
+  try{document.querySelectorAll('#perfil-body .sec-cov').forEach(function(e){e.remove();});document.querySelectorAll('#perfil-body .sec-head').forEach(function(h){h.removeAttribute('data-cov-pct');});}catch(e){}
   safeRender('kpi-perf', () => {
     // ── Usa dados ao vivo do store (enriquecidos pelo DASH-BR-COMPLETO) ──
     const rows  = _perfilSrc().rows  || [];
@@ -1548,11 +1608,24 @@ function buildPerfil() {
     const avals       = d.map(r => parseFloat(r.avaliacao)).filter(v => !isNaN(v) && v >= 0 && v <= 10);
     const avgAval     = avals.length > 0 ? (avals.reduce((a,b)=>a+b,0)/avals.length).toFixed(1) : '—';
     const comMvv      = d.filter(r => (r.mvv||'').toUpperCase().includes('SIM')).length;
+    const _idade = (window.__idadeMedia? window.__idadeMedia(d):0);
+    const _empUniq = (window.__empresasUnicas? window.__empresasUnicas(d):comEmpresa);
+    const _cidUniq = (window.__cidadesUnicas? window.__cidadesUnicas(d):0);
+    const _pctMvv = Math.round(comMvv/total*100);
+    const _leitura = 'Turma em <b>transição de microempresa para empresa estruturada</b>: ' + _pctMvv + '% já têm missão, visão e valores, mas a operação segue dependente do dono. As prioridades declaradas são <b>estruturação comercial e vendas</b>, <b>gestão de pessoas</b> e <b>previsibilidade de caixa</b>.';
     document.getElementById('kpi-perf').innerHTML = `
-      <div class="kpi hi"><div class="kpi-lbl">Confirmados (perfil)</div><div class="kpi-val g">${total}</div><div class="kpi-sub">todos os confirmados analisados</div></div>
-      <div class="kpi hi-b"><div class="kpi-lbl">Empresas mapeadas</div><div class="kpi-val b">${comEmpresa}</div><div class="kpi-sub">${Math.round(comEmpresa/total*100)}% do total</div></div>
-      <div class="kpi hi-b"><div class="kpi-lbl">Avaliação média</div><div class="kpi-val b">${avgAval}</div><div class="kpi-sub">colaboração (0–10)</div></div>
-      <div class="kpi hi-a"><div class="kpi-lbl">Têm MVV</div><div class="kpi-val a">${Math.round(comMvv/total*100)}%</div><div class="kpi-sub">missão, visão e valores</div></div>
+      <div class="perfil-hero">
+        <div class="ph-kpis">
+          <div class="ph-kpi"><div class="ph-k">Confirmados analisados</div><div class="ph-n g">${total}</div><div class="ph-x">base de análise</div></div>
+          <div class="ph-kpi"><div class="ph-k">Idade média</div><div class="ph-n">${_idade>0?_idade:'—'}</div><div class="ph-x">${_idade>0?'anos · perfil etário':'sem dados'}</div></div>
+          <div class="ph-kpi"><div class="ph-k">Empresas representadas</div><div class="ph-n">${_empUniq}</div><div class="ph-x">${_cidUniq>0?'em '+_cidUniq+' cidades':'confirmadas'}</div></div>
+          <div class="ph-kpi"><div class="ph-k">Empresas com MVV</div><div class="ph-n g">${_pctMvv}%</div><div class="ph-x">${comMvv} de ${total} empresas</div></div>
+        </div>
+        <div class="ph-leitura">
+          <div class="ph-leitura-t">Leitura estratégica</div>
+          <div class="ph-leitura-b">${_leitura}</div>
+        </div>
+      </div>
     `;
 
     // ── Segmento (vem do Typeform — coluna 14 "Qual é o modelo de negócio") ──
@@ -1583,7 +1656,7 @@ function buildPerfil() {
       const g = (r.genero||'').trim() || 'Não informado';
       genMap[g] = (genMap[g]||0)+1;
     });
-    const gL = Object.keys(genMap), gD = gL.map(k=>genMap[k]), gC = [BL,'#f472b6',AM,G];
+    const gL = Object.keys(genMap), gD = gL.map(k=>genMap[k]), gC = [G,CR,'rgba(99,248,88,.45)','rgba(234,229,225,.4)'];
     renderDonut('cGen', gL, gD, gC); renderLegend('lGen', gL, gD, gC);
     const genCobertura = d.filter(r => (r.genero||'').trim() && (r.genero||'').trim() !== 'Não informado').length;
     appendCobertura('cGen', genCobertura, total, 'não informaram o gênero');
@@ -1599,7 +1672,7 @@ function buildPerfil() {
     }
     const cMap = {};
     d.forEach(r => { const k = nCli(r.tipoCliente); cMap[k]=(cMap[k]||0)+1; });
-    const cL = Object.keys(cMap), cD = cL.map(k=>cMap[k]), cC = [AM,BL,G,RD,'#a78bfa'];
+    const cL = Object.keys(cMap), cD = cL.map(k=>cMap[k]), cC = pceColors(5);
     renderDonut('cCli', cL, cD, cC); renderLegend('lCli', cL, cD, cC);
     const cliCobertura = d.filter(r => (r.tipoCliente||'').trim()).length;
     appendCobertura('cCli', cliCobertura, total, 'não informaram o tipo de cliente atendido');
@@ -1726,14 +1799,14 @@ function buildPerfil() {
       const pct=avg/10;
       const R=52,C=2*Math.PI*R,arc=C*0.75;
       const fill=arc*pct;
-      const col=avg<=4?'#ff5f5f':avg<=6?'#63F858':avg<=8?'#46d160':'#4d9fff';
+      const col=pceScore(avg);
       const maxc=Math.max.apply(null,Object.keys(bins).map(function(k){return bins[k];}).concat([1]));
       const BAR_H=120; // altura (px) da barra de maior frequência
       var scaleHtml='';
       for(var n=0;n<=10;n++){
         var vv=bins[n]||0;
         var hh=vv>0?Math.max(6,Math.round(BAR_H*vv/maxc)):0;
-        var cc=n<=4?'#ff5f5f':n<=6?'#63F858':n<=8?'#46d160':'#4d9fff';
+        var cc=pceScore(n);
         scaleHtml+='<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;flex:1;min-width:0">'
           +'<div style="font-family:\'Barlow Condensed\',sans-serif;font-size:14px;font-weight:800;line-height:1;color:'+(vv>0?'var(--cream)':'transparent')+'">'+(vv>0?vv:'')+'</div>'
           +'<div style="width:100%;max-width:30px;height:'+hh+'px;min-height:'+(vv>0?6:2)+'px;border-radius:5px 5px 3px 3px;background:'+(vv>0?cc:'rgba(255,255,255,.05)')+';transition:height .6s ease"></div>'
@@ -1790,7 +1863,7 @@ function buildPerfil() {
     // ── Organograma (contagem já feita acima, antes das stat-pills) ──
     const orgL=Object.keys(orgMap).filter(k=>orgMap[k]>0);
     const orgD=orgL.map(k=>orgMap[k]);
-    const orgC=['#46d160','#63F858','#ff5f5f','#4d9fff'];
+    const orgC=[G,AM,RD,'rgba(234,229,225,.4)'];
     if(orgL.length>0){ renderDonut('cOrg',orgL,orgD,orgC); renderLegend('lOrg',orgL,orgD,orgC); }
     appendCobertura('cOrg', d.filter(r=>(r.organograma||'').trim().length>0).length, total, 'Organograma');
 
@@ -2295,7 +2368,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     if (!el) return;
     if (!items || items.length === 0) { el.innerHTML = '<div class="ins-skeleton"><img class="ins-skeleton-logo" src="assets/img/logo-pce-center-ee117996.png" alt=""/><div class="ins-skeleton-bars"><div class="ins-skeleton-bar" style="width:78%"></div><div class="ins-skeleton-bar" style="width:55%"></div><div class="ins-skeleton-bar" style="width:82%"></div></div><div class="ins-skeleton-txt">Aguardando dados ao vivo</div></div>'; return; }
     const max = items[0][1];
-    const cores = [G, BL, AM, '#a78bfa', '#2dd4bf', '#fb923c'];
+    const cores = pceColors(6);
     el.innerHTML = items.map(([label, val], i) => {
       const pct = total > 0 ? Math.round(val/total*100) : 0;
       const w   = max  > 0 ? Math.round(val/max*100)   : 0;
@@ -2576,6 +2649,9 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     });
     return set.size;
   }
+  window.__idadeMedia    = idadeMedia;
+  window.__empresasUnicas = empresasUnicas;
+  window.__cidadesUnicas  = cidadesUnicas;
   function estadosUnicos(data) {
     const set = new Set();
     data.forEach(r => {
@@ -2787,7 +2863,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     const labels = ordem.filter(k=>agg[k] && agg[k].count>0);
     const medias = labels.map(k=>Math.round(agg[k].soma/agg[k].count));
     const counts = labels.map(k=>agg[k].count);
-    const cores  = ['#4d9fff','#63F858','#a78bfa','#f5c542','#ff5f5f'];
+    const cores  = pceColors(5);
     safeRender('cInsFatEt', () => {
       destroyChart('cInsFatEt');
       const el = safeEl('cInsFatEt'); if(!el) return;
@@ -2832,7 +2908,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
       if (v>0){agg[c].soma+=v; agg[c].count++;}
     });
     const ordem = ['B2B','B2C','B2G','B2B + B2C'];
-    const cores = {'B2B':'#4d9fff','B2C':'#f5c542','B2G':'#a78bfa','B2B + B2C':'#63F858'};
+    const cores = {'B2B':G,'B2C':'rgba(99,248,88,.5)','B2G':CR,'B2B + B2C':'rgba(99,248,88,.28)'};
     const el = document.getElementById('ins-tipo-cli-fat');
     if (!el) return;
     const lista = ordem.filter(k=>agg[k] && agg[k].count>0);
@@ -2866,7 +2942,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     safeRender('cInsEstFat', () => {
       destroyChart('cInsEstFat');
       const el = safeEl('cInsEstFat'); if(!el) return;
-      CHART_REGISTRY['cInsEstFat']=new Chart(el,{type:'bar',data:{labels:top.map(([k])=>k),datasets:[{data:top.map(([,v])=>Math.round(v.soma/v.count)),backgroundColor:['#63F858','#4d9fff','#a78bfa','#f5c542','#ff5f5f'].slice(0,top.length),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>'  Faturamento médio anual: '+fmtBRL(c.raw)+'/ano · '+top[c.dataIndex][1].count+' empresas'}}},scales:{x:{grid:{color:GC},ticks:{color:LC,font:{size:10},callback:v=>fmtBRL(v)},border:{color:'transparent'}},y:{grid:{display:false},ticks:{color:'#adada8',font:{size:11},font:{weight:'700'}},border:{color:'transparent'}}}},plugins:[barLabelsPlugin(v=>fmtBRL(v)+'/ano')]});
+      CHART_REGISTRY['cInsEstFat']=new Chart(el,{type:'bar',data:{labels:top.map(([k])=>k),datasets:[{data:top.map(([,v])=>Math.round(v.soma/v.count)),backgroundColor:pceColors(top.length),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>'  Faturamento médio anual: '+fmtBRL(c.raw)+'/ano · '+top[c.dataIndex][1].count+' empresas'}}},scales:{x:{grid:{color:GC},ticks:{color:LC,font:{size:10},callback:v=>fmtBRL(v)},border:{color:'transparent'}},y:{grid:{display:false},ticks:{color:'#adada8',font:{size:11},font:{weight:'700'}},border:{color:'transparent'}}}},plugins:[barLabelsPlugin(v=>fmtBRL(v)+'/ano')]});
     });
     const totalAnalisado = top.reduce((s,[,v])=>s+v.count,0);
     appendCobertura('cInsEstFat', totalAnalisado, data.length, 'estão em estados fora do top 5 ou sem faixa de faturamento informada');
@@ -2998,7 +3074,7 @@ function toggleFaq(i){const el=document.getElementById('faq-'+i);if(el)el.classL
     safeRender('cInsSetorTkt',()=>{
       destroyChart('cInsSetorTkt');
       const el=safeEl('cInsSetorTkt'); if(!el)return;
-      CHART_REGISTRY['cInsSetorTkt']=new Chart(el,{type:'bar',data:{labels:topMedia.map(([k])=>k.substring(0,22)),datasets:[{data:topMedia.map(([,v])=>Math.round(v.media)),backgroundColor:['#4d9fff','#63F858','#f5c542','#a78bfa','#ff5f5f','#2dd4bf','#fb923c','#f472b6','#4bc943','#243d26'].slice(0,topMedia.length),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>'  Faturamento médio anual: '+fmtBRL(c.raw)+'/ano · '+topMedia[c.dataIndex][1].count+' empresas'}}},scales:{x:{grid:{color:GC},ticks:{color:LC,font:{size:10},callback:v=>fmtBRL(v)},border:{color:'transparent'}},y:{grid:{display:false},ticks:{color:'#adada8',font:{size:10}},border:{color:'transparent'}}}},plugins:[barLabelsPlugin(v=>fmtBRL(v)+'/ano')]});
+      CHART_REGISTRY['cInsSetorTkt']=new Chart(el,{type:'bar',data:{labels:topMedia.map(([k])=>k.substring(0,22)),datasets:[{data:topMedia.map(([,v])=>Math.round(v.media)),backgroundColor:pceColors(topMedia.length).slice(0,topMedia.length),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{...TOOLTIP_DEFAULTS,callbacks:{label:c=>'  Faturamento médio anual: '+fmtBRL(c.raw)+'/ano · '+topMedia[c.dataIndex][1].count+' empresas'}}},scales:{x:{grid:{color:GC},ticks:{color:LC,font:{size:10},callback:v=>fmtBRL(v)},border:{color:'transparent'}},y:{grid:{display:false},ticks:{color:'#adada8',font:{size:10}},border:{color:'transparent'}}}},plugins:[barLabelsPlugin(v=>fmtBRL(v)+'/ano')]});
     });
     const totalMedia = topMedia.reduce((s,[,v])=>s+v.count,0);
     appendCobertura('cInsSetorTkt', totalMedia, data.length, 'estão em modelos com menos de 2 empresas ou sem faixa de faturamento informada');
