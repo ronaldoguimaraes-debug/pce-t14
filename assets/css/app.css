@@ -2251,3 +2251,119 @@ body{background:var(--bg)}
 .nv-prepos button.on{background:var(--green);color:var(--bg,#1F1F1D)}
 .nv-ringl{font-size:11px !important;letter-spacing:.1em}
 @media(max-width:900px){.nv-kpis{grid-template-columns:1fr}.nv-verdict{grid-template-columns:1fr}}
+
+
+/* ── LOTE 3 · Manuais parte 1 · hero + seções + cards ── */
+.mhero{position:relative;display:grid;grid-template-columns:1fr 1.05fr;min-height:250px;border-radius:var(--rxl,15px);overflow:hidden;background:#101410;border:1px solid rgba(99,248,88,.2);margin:0 0 18px}
+.mhero-txt{position:relative;z-index:2;padding:30px 32px;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(90deg,#101410 0%,#101410 55%,rgba(16,20,16,0) 100%)}
+.mhero-k{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--green);margin-bottom:12px}
+.mhero-k::before{content:"\2713";display:inline-block;margin-right:8px;font-size:12px}
+.mhero-t{font-family:var(--font-title,"Montserrat");font-weight:800;font-size:38px;line-height:1.05;color:var(--cream);margin:0 0 14px;letter-spacing:-.01em}
+.mhero-s{font-size:14px;line-height:1.5;color:var(--muted);margin:0 0 20px;max-width:440px}
+.mhero-acts{display:flex;gap:10px;flex-wrap:wrap}
+.mhero-btn{font-family:var(--font-texto,"Barlow");font-weight:700;font-size:13px;color:var(--cream);background:var(--card,#252523);border:1px solid var(--border3,rgba(255,255,255,.08));border-radius:10px;padding:11px 18px;cursor:pointer}
+.mhero-btn:hover{border-color:rgba(99,248,88,.4);color:var(--green)}
+.mhero-img{position:relative;background-size:cover;background-position:center right;min-height:250px}
+.mhero-img::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#101410 0%,rgba(16,20,16,.35) 30%,rgba(16,20,16,0) 60%)}
+.admin-toolbar{border-radius:11px}
+.manual-section{margin:26px 0 8px}
+.manual-section-header{gap:12px;margin-bottom:14px}
+.manual-section-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(99,248,88,.1);border:1px solid rgba(99,248,88,.25);flex-shrink:0}
+.manual-section-title{font-family:var(--font-num,"Barlow Condensed");font-size:14px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cream)}
+.manual-section-line{flex:1;height:1px;background:var(--border,rgba(255,255,255,.06))}
+.manual-section-count{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2);background:rgba(255,255,255,.04);border:1px solid var(--border,rgba(255,255,255,.06));border-radius:20px;padding:3px 11px}
+.section-grab-handle{color:var(--muted2);cursor:grab}
+.sa-btn{background:var(--card,#252523);border:1px solid var(--border3,rgba(255,255,255,.08));border-radius:8px;color:var(--muted);cursor:pointer;padding:5px 8px}
+.sa-btn:hover{color:var(--green);border-color:rgba(99,248,88,.35)}
+.mcard{border-radius:var(--rxl,15px);border:1px solid var(--border,rgba(255,255,255,.06))}
+.mcard:hover{border-color:rgba(99,248,88,.35);transform:translateY(-2px);box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.mcard-cover-wrap{background:linear-gradient(135deg,#1a2a1c,#13181a)}
+.mcard-cover-placeholder{background:repeating-linear-gradient(135deg,transparent 0 14px,rgba(99,248,88,.05) 14px 16px)}
+.mcard-cover-upload{font-family:var(--font-texto,"Barlow");font-weight:700;font-size:11.5px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.15);color:var(--cream);border-radius:8px;padding:6px 10px;backdrop-filter:blur(4px)}
+.mcard-cover-upload:hover{border-color:rgba(99,248,88,.5);color:var(--green)}
+.mcard-body{padding:16px 18px 10px}
+.mcard-tag{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green);margin-bottom:6px}
+.mcard-title{font-family:var(--font-title,"Montserrat");font-size:16px;font-weight:700;line-height:1.25;color:var(--cream);letter-spacing:0}
+.mcard-desc{font-size:12.5px;line-height:1.5;color:var(--muted);margin-top:6px}
+.mcard-meta{font-size:11px;color:var(--muted2);margin-top:10px}
+.mcard-rename-btn{font-family:var(--font-texto,"Barlow");font-size:11.5px;font-weight:600;color:var(--muted);background:transparent;border:none;padding:6px 0 0;cursor:pointer}
+.mcard-rename-btn:hover{color:var(--green)}
+.mcard-footer{padding:12px 18px 14px;border-top:1px solid var(--border,rgba(255,255,255,.06));display:flex;align-items:center}
+.mcard-count{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted2)}
+.mcard-arrow{margin-left:auto;width:26px;height:26px;border-radius:50%;background:rgba(99,248,88,.1);color:var(--green);display:flex;align-items:center;justify-content:center}
+.add-card-btn{border:1px dashed rgba(99,248,88,.35);border-radius:var(--rxl,15px);background:transparent;color:var(--green);font-family:var(--font-num,"Barlow Condensed");font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer}
+.add-card-btn:hover{background:rgba(99,248,88,.06);border-color:rgba(99,248,88,.6)}
+.add-card-btn .ac-icon{font-size:26px;line-height:1}
+.add-section-btn{width:100%;border:1px dashed var(--border3,rgba(255,255,255,.08));border-radius:12px;background:transparent;color:var(--muted);font-family:var(--font-texto,"Barlow");font-weight:700;font-size:13px;padding:14px;cursor:pointer;margin-top:18px}
+.add-section-btn:hover{color:var(--green);border-color:rgba(99,248,88,.4)}
+@media(max-width:900px){
+  .mhero{grid-template-columns:1fr;min-height:0}
+  .mhero-img{min-height:160px;order:-1}
+  .mhero-img::after{background:linear-gradient(180deg,rgba(16,20,16,0) 40%,#101410 100%)}
+  .mhero-txt{background:none;padding:20px 18px 22px}
+  .mhero-t{font-size:28px}
+}
+
+
+/* ── LOTE 3 · Manuais parte 2 · modal do card ── */
+.manual-modal{border-radius:var(--rxl,15px);border:1px solid var(--border3,rgba(255,255,255,.08));max-width:860px;background:var(--bg2,#212120)}
+.manual-modal-hero{height:230px;background:#101410}
+.manual-modal-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,20,16,0) 40%,rgba(33,33,32,.95) 100%);pointer-events:none}
+.manual-modal-hero-placeholder{background:repeating-linear-gradient(135deg,#131a14 0 14px,#101410 14px 16px)}
+.manual-modal-close{background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.18);color:var(--cream);z-index:3;font-size:14px}
+.manual-modal-close:hover{border-color:rgba(99,248,88,.5);color:var(--green)}
+.manual-modal-upload-btn{font-family:var(--font-texto,"Barlow");font-weight:700;font-size:11.5px;letter-spacing:0;text-transform:none;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.18);color:var(--cream);border-radius:8px;padding:7px 12px;backdrop-filter:blur(4px);z-index:3}
+.manual-modal-upload-btn:hover{border-color:rgba(99,248,88,.5);color:var(--green)}
+.manual-modal-body{padding:22px 30px 28px}
+.manual-edit-hint{background:rgba(99,248,88,.08);border:1px solid rgba(99,248,88,.25);color:var(--cream);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:16px}
+.manual-edit-hint strong{color:var(--green)}
+.manual-modal-tag{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--green);display:inline-block;background:rgba(99,248,88,.1);border:1px solid rgba(99,248,88,.25);border-radius:20px;padding:3px 10px;margin-bottom:10px}
+.manual-modal-title{font-family:var(--font-title,"Montserrat");font-size:24px;font-weight:800;letter-spacing:-.01em;line-height:1.15;color:var(--cream);margin:0 0 16px}
+.manual-modal-title[contenteditable="true"],.manual-modal-tag[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.6);outline-offset:3px;border-radius:4px}
+.mpce-tabs{display:inline-flex;gap:4px;background:var(--card,#252523);border:1px solid var(--border3,rgba(255,255,255,.08));border-radius:10px;padding:4px;margin:0 0 18px}
+.mpce-tab{font-family:var(--font-num,"Barlow Condensed");font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:none;color:var(--muted);border-radius:7px;padding:6px 14px}
+.mpce-tab.on{background:var(--green);color:var(--bg,#1F1F1D)}
+.manual-modal-content .ms-day{margin-bottom:18px}
+.manual-modal-content .ms-day-badge{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--green);background:rgba(99,248,88,.1);border:1px solid rgba(99,248,88,.25);border-radius:20px;padding:3px 11px;margin-bottom:10px}
+.manual-modal-content .ms-day-badge[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.6);outline-offset:3px}
+.manual-modal-content .ms-block{background:var(--card,#252523);border:1px solid var(--border,rgba(255,255,255,.06));border-radius:12px;margin-bottom:10px}
+.manual-modal-content .ms-block.editing{border-color:rgba(99,248,88,.4);background:rgba(99,248,88,.04)}
+.manual-modal-content .ms-section{padding:16px 18px}
+.manual-modal-content .ms-icon{width:32px;height:32px;min-width:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;background:rgba(99,248,88,.1);border:1px solid rgba(99,248,88,.22);margin-top:0}
+.manual-modal-content .ms-icon[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.5);background:rgba(99,248,88,.08)}
+.manual-modal-content .ms-title{font-family:var(--font-title,"Montserrat");font-size:15px;font-weight:700;letter-spacing:0;color:var(--cream);margin:0 0 6px}
+.manual-modal-content .ms-title[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.45);outline-offset:3px}
+.manual-modal-content .ms-desc{font-size:13px;line-height:1.6;color:var(--muted)}
+.manual-modal-content .ms-desc[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.45);outline-offset:3px;color:var(--cream)}
+.manual-modal-content .ms-item{font-size:13px}
+.manual-modal-content .ms-item-text[contenteditable="true"]{outline:1px dashed rgba(99,248,88,.45);outline-offset:2px}
+.manual-modal-content .ms-dot{background:var(--green)}
+.manual-modal-content .ms-item-del{background:rgba(255,95,95,.12);border-color:rgba(255,95,95,.35)}
+#mpce-add-day,#manual-add-day{width:100%;border:1px dashed rgba(99,248,88,.35);border-radius:10px;background:transparent;color:var(--green);font-family:var(--font-num,"Barlow Condensed");font-weight:700;font-size:12px;letter-spacing:.1em;text-transform:uppercase;padding:11px;cursor:pointer;margin-top:6px}
+#mpce-add-day:hover,#manual-add-day:hover{background:rgba(99,248,88,.06);border-color:rgba(99,248,88,.6)}
+.mpce-anexos{margin-top:18px}
+.mpce-anexos-h{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);margin-bottom:8px}
+.mpce-anexo{background:var(--card,#252523);border:1px solid var(--border,rgba(255,255,255,.06));border-radius:10px;padding:9px 12px;font-size:12.5px}
+.mpce-anexo-nm{color:var(--cream);font-weight:600}
+.mpce-anexo-sz{color:var(--muted2);font-size:11px}
+.mpce-anexo-add{font-family:var(--font-num,"Barlow Condensed");font-weight:700;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);background:rgba(99,248,88,.08);border:1px dashed rgba(99,248,88,.35);border-radius:10px;padding:9px 12px;cursor:pointer}
+.manual-modal-footer{padding:14px 22px;background:rgba(0,0,0,.25);border-top:1px solid var(--border,rgba(255,255,255,.06));gap:10px}
+.mfb-btn{font-family:var(--font-texto,"Barlow");font-weight:700;font-size:13px;letter-spacing:0;text-transform:none;border-radius:10px;padding:10px 16px;border:1px solid var(--border3,rgba(255,255,255,.08));background:var(--card,#252523);color:var(--cream);cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.mfb-btn:hover{border-color:rgba(99,248,88,.4)}
+.mfb-btn.primary{border-color:rgba(99,248,88,.35);color:var(--green);background:rgba(99,248,88,.08)}
+.mfb-btn.save{background:var(--green);color:var(--bg,#1F1F1D);border-color:var(--green)}
+.mfb-btn.save:hover{filter:brightness(1.06)}
+.mfb-btn.cancel{color:var(--muted)}
+.mpce-guide{border-radius:12px;border:1px solid var(--border3,rgba(255,255,255,.08))}
+.mpce-guide-nav{background:rgba(0,0,0,.2);border-right:1px solid var(--border3,rgba(255,255,255,.08))}
+.mpce-guide-nav-h{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--muted2)}
+.mpce-guide-item{border-radius:9px}
+.mpce-guide-item.active{background:rgba(99,248,88,.1);border-color:rgba(99,248,88,.3)}
+.mpce-guide-num{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:800}
+.mpce-guide-item.active .mpce-guide-num{background:var(--green);color:var(--bg,#1F1F1D)}
+.mpce-guide-tx{font-size:12.5px}
+.ms-ctrl-btn{font-family:var(--font-num,"Barlow Condensed");font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:7px;padding:5px 10px;border:1px solid var(--border3,rgba(255,255,255,.08));color:var(--muted)}
+.ms-ctrl-btn:hover{color:var(--green);border-color:rgba(99,248,88,.4)}
+.ms-ctrl-btn.danger{color:rgba(255,95,95,.85);border-color:rgba(255,95,95,.3)}
+.ms-ctrl-btn.danger:hover{color:#ff5f5f;border-color:rgba(255,95,95,.55)}
+@media(max-width:900px){.manual-modal-hero{height:170px}.manual-modal-body{padding:18px 16px 22px}.manual-modal-title{font-size:20px}.manual-modal-footer{padding:12px 14px}}
