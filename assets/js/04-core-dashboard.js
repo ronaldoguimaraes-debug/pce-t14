@@ -1,23 +1,23 @@
 /* PCE 2.0 · 05-core-dashboard
    Extraido do index monolitico sem alteracao de logica.
    Engenharia e fundacao: Ronaldo Ferreira. */
-const PCE_VERSION = '3.5.6';
+const PCE_VERSION = '3.5.7';
 const API_SCHEMA_VERSION = '3.0'; // atualizado para DASH-BR-COMPLETO v2
 const DATA_SOURCES = {
   br: {
     id:'br',label:'T14 Brasil',flag:'🇧🇷',color:'#63F858',
     url:'https://script.google.com/macros/s/AKfycbyJenWWKEcbaHT4juL2Qq1Oe8sfLeuNbf5tj4YJ1546iXGI9b03khspyx4iLx32Hl7H/exec',
-    type:'full',timeout:15000,retries:1,retryDelay:2000,
+    type:'full',timeout:30000,retries:1,retryDelay:2000,
   },
   t15: {
     id:'t15',label:'T15 Brasil',flag:'🇧🇷',color:'#63F858',
     url:'https://script.google.com/macros/s/AKfycbxqKIceC2AQ4pD09_-DLGPcSsf6yh0nl-5pU_AUzMo70Xvb8PZpxmOgW6gNojkN-w0h/exec',
-    type:'full',timeout:15000,retries:1,retryDelay:2000,
+    type:'full',timeout:30000,retries:1,retryDelay:2000,
   },
   t16: {
     id:'t16',label:'T16 Brasil',flag:'🇧🇷',color:'#63F858',
     url:'https://script.google.com/macros/s/AKfycbwseu9AlqFt1jlzER-qYrJB7g0cKs0sYJ399JdRunP0q3usubAifCASVIZ8OeWYdYkw/exec',
-    type:'full',timeout:15000,retries:1,retryDelay:2000,
+    type:'full',timeout:30000,retries:1,retryDelay:2000,
   },
 };
 const SCHEMA = {
@@ -695,7 +695,7 @@ function __kpiDashStartWatcher(){
   var startTime = Date.now();
   var BUFFER_AFTER_LOAD = 3000;  // 3s extras após banner sumir
   var MIN_DISPLAY      = 1500;   // skeleton aparece por no mínimo 1.5s
-  var SAFETY_MAX       = 15000;  // fallback se API nunca responde
+  var SAFETY_MAX       = 35000;  // fallback se API nunca responde
   var observer = null;
   var safetyTimer = null;
   function revealKpis(){
